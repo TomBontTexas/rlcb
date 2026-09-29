@@ -59,6 +59,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* ---------- sheet ---------- */
 .page{display:none}
 .page.on{display:grid}
+.history{grid-template-columns:1fr}
+.history .band .hist-name{font-family:var(--body);text-transform:none;letter-spacing:0;font-weight:400;margin-left:6px}
+#histText{display:block;width:100%;min-height:calc(100vh - 200px);min-height:calc(100dvh - 200px);resize:vertical;border:1px solid var(--rule);border-radius:6px;background:var(--box);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.6;padding:14px 16px;white-space:pre-wrap;tab-size:4}
+#histText:focus{outline:2px solid var(--hot-line);outline-offset:-1px}
+.hist-print{display:none;white-space:pre-wrap;font-family:var(--body);font-size:13px;line-height:1.5}
 .front{grid-template-columns:repeat(12,1fr);gap:12px}
 .back{grid-template-columns:repeat(12,1fr);gap:12px}
 .c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
@@ -216,6 +221,12 @@ button.chip{cursor:pointer}
   .wrap{max-width:none;padding:0}
   .page{display:grid!important;break-after:page;break-inside:avoid;gap:7px!important;zoom:.72}
   .page:last-child{break-after:auto}
+  #page-back{break-after:auto}
+  #page-history{zoom:1;display:block!important;break-before:page}
+  #page-history.empty{display:none!important}
+  #histText{display:none}
+  .hist-print{display:block}
+  #page-history .box{overflow:visible;break-inside:auto}
   .box{break-inside:avoid}
   .lines.tall{min-height:240px}.lines.med{min-height:180px}
 
@@ -239,6 +250,7 @@ button.chip{cursor:pointer}
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" id="tab-front" aria-selected="true" data-tab="front">Front</button>
       <button class="tab" role="tab" id="tab-back" aria-selected="false" data-tab="back">Back</button>
+      <button class="tab" role="tab" id="tab-history" aria-selected="false" data-tab="history">History</button>
     </div>
     <div class="tools">
       <button class="btn" data-open="checklist" id="statusBtn">Checklist</button>
@@ -251,6 +263,16 @@ button.chip{cursor:pointer}
   <main>
     <section class="page front on" id="page-front" role="tabpanel" aria-labelledby="tab-front"></section>
     <section class="page back" id="page-back" role="tabpanel" aria-labelledby="tab-back"></section>
+    <section class="page history" id="page-history" role="tabpanel" aria-labelledby="tab-history">
+      <div class="box c12">
+        <h2 class="band">History <span class="hist-name"></span><span class="hint" id="histCount"></span></h2>
+        <div class="bd">
+          <label for="histText" class="sr">Character history</label>
+          <textarea id="histText" spellcheck="true" placeholder="Write your investigator’s history here, as long as you like. Line breaks and blank lines are kept exactly as you type them. It saves automatically."></textarea>
+          <div id="histPrint" class="hist-print"></div>
+        </div>
+      </div>
+    </section>
   </main>
   <p class="foot credit">Web app by <b>TexasBont</b> · TexasBont at gmail.com</p>
   <p class="foot">Version <span class="app-ver"></span> · Built from the Rivers of London RPG investigator sheet (© 2025 Chaosium Inc.; Rivers of London © 2011–2025 Ben Aaronovitch). Personal, non-commercial use. Page numbers refer to the core rulebook.</p>
@@ -558,7 +580,7 @@ function blank(){
     contacts:Array.from({length:8},()=>({n:'',r:'',secure:false,sour:false})),
     sig:{p:[null,null,null],el:['','',''],keep:[true,true,false],third:'',text:''},
     back:{cFamily:'',cHome:'',cWhere:'',culture:'',pFamily:'',pHome:'',pWhere:'',pCulture:'',brush:'unsure',b1:'',b2:'',b3:'',b4:'',text:''},
-    equip:'', cases:'',
+    equip:'', cases:'', history:'',
     customSkills:[], customAdv:[], customDis:[],
     dev:{pts:0,log:[],phase:null,phases:0,advBought:[],seq:0}
   };
@@ -846,6 +868,15 @@ function sigText(){
   return parts.join('; ');
 }
 
+function syncHistory(){
+  const ta=document.getElementById('histText'), v=S.history||'';
+  if(ta.value!==v&&document.activeElement!==ta) ta.value=v;
+  document.getElementById('histPrint').textContent=v;
+  document.getElementById('page-history').classList.toggle('empty',!v.trim());
+  document.querySelector('#page-history .hist-name').textContent=S.info.name?'— '+S.info.name:'';
+  const words=(v.match(/\S+/g)||[]).length;
+  document.getElementById('histCount').textContent=words?words.toLocaleString()+' word'+(words===1?'':'s'):'';
+}
 function renderSheet(){
   const V=validate(); const sk=computeSkills(); const m=mov(); const L=luckStart(); const mp=mpStart();
   const o=occ();
@@ -950,6 +981,7 @@ function renderSheet(){
   </div>`;
 
   const cRows=S.contacts.map((c,i)=>`<div class="crow hot" data-open="contacts" tabindex="0"><span class="nm">${c.n?esc(c.n):''}${c.r?' <span class="muted">/ '+esc(c.r)+'</span>':''}<span class="sub" style="text-align:left">Name · Relationship</span></span><span class="ss"><span class="${c.secure?'on':''}">${c.secure?'☑':'☐'} Secure</span> <span class="${c.sour?'on':''}">${c.sour?'☑':'☐'} Sour</span></span></div>`).join('');
+  syncHistory();
   document.getElementById('page-back').innerHTML=`
   <div class="c6 box hot" data-open="info" data-focus="name" tabindex="0"><h2 class="band">Name △ <span style="font-family:var(--body);text-transform:none;letter-spacing:0;font-weight:400;margin-left:8px">${esc(S.info.name)}</span></h2></div>
   <div class="c6 box hot" data-open="occupation" tabindex="0"><h2 class="band">Occupation △ <span style="font-family:var(--body);text-transform:none;letter-spacing:0;font-weight:400;margin-left:8px">${esc(occName())}</span></h2></div>
@@ -1696,6 +1728,8 @@ document.getElementById('jsonIn').addEventListener('change',e=>{
 try{ const th=localStorage.getItem('rlcb.theme'); if(th) document.documentElement.dataset.theme=th; }catch(e){}
 loadRoster();
 renderSheet();
+document.getElementById('histText').addEventListener('input',e=>{ S.history=e.target.value; save(); syncHistory(); });
+document.getElementById('histText').addEventListener('blur',()=>saveNow());
 
 /* New-version banner (same approach as GASCAR): re-load version.js through a
    fresh <script> tag with a cache-busting query and compare its
