@@ -1174,15 +1174,19 @@ const VIEWS={
  adv(){
   const slots=advSlots();
   const advHtml=allAdv().map(a=>{ const on=hasAdv(a.id); const why=advCheck(a); const full=!on&&(slots+(a.major?2:1)>2);
-    return `<label class="opt ${on?'sel':''} ${(!on&&(why.length||full))?'no':''}"><input type="checkbox" data-a="toggleAdv" data-x="${a.id}" ${on?'checked':''}><div style="flex:1"><div class="t">${esc(a.n)}${a.custom?' <span class="tag">custom</span>':''}${a.major?' <span class="tag">major · 2 choices</span>':''}${a.house?' <span class="tag">homebrew</span>':''}</div><div class="d">${esc(a.d)}</div>
+    const bought=on&&S.dev.advBought.includes(a.id);
+    const fullWhy=full&&!why.length?(a.major&&slots===1?'Needs both choices (major), but 1 is already used. Untick it first, or buy this with development points.':'No choices left ('+slots+' of 2 used). Untick one first, or buy this with development points.'):'';
+    return `<label class="opt ${on?'sel':''} ${(!on&&(why.length||full))?'no':''}"><input type="checkbox" data-a="toggleAdv" data-x="${a.id}" ${on?'checked':''} ${bought?'disabled':''}><div style="flex:1"><div class="t">${esc(a.n)}${a.custom?' <span class="tag">custom</span>':''}${a.major?' <span class="tag">major · 2 choices</span>':''}${a.house?' <span class="tag">homebrew</span>':''}</div><div class="d">${esc(a.d)}</div>
       <div class="small muted">Prerequisite: ${Object.keys(a.pre).length?[...CHARS.filter(c=>a.pre[c]).map(c=>c+' '+a.pre[c]),a.pre.skill?a.pre.skill[0]+' '+a.pre.skill[1]+'%':null].filter(Boolean).join(', '):'none'}</div>
       ${why.length?`<div class="why">Not met: ${esc(why.join(', '))}</div>`:''}
+      ${fullWhy?`<div class="why">${esc(fullWhy)}</div>`:''}
+      ${bought?'<div class="small"><span class="tag">bought in play</span> Doesn’t use a creation choice. To remove it and get the points back, use × on it in the <a href="#" data-a="open" data-x="develop">Development</a> history.</div>':''}
       ${on&&a.field?`<div style="margin-top:6px">${fld(a.field,`<input type="text" data-b="advField.${a.id}" value="${esc(S.advField[a.id]||'')}">`)}</div>`:''}</div></label>`; }).join('');
   const pk=S.pkg.id;
   const disHtml=allDis().map(d=>{ const on=hasDis(d.id); const why=disCheck(d); return `<label class="opt ${on?'sel':''} ${why.length&&!on?'no':''}"><input type="radio" name="dis" data-a="setDis" data-x="${d.id}" ${on?'checked':''}><div><div class="t">${esc(d.n)}${d.custom?' <span class="tag">custom</span>':''}</div><div class="d">${esc(d.d||'')}</div>${why.length?`<div class="why">${esc(why.join(', '))}</div>`:''}</div></label>`; }).join('');
   return ['Step 3 · Advantages',`
   ${rulesBox('<p>Choose up to <b>two</b> advantages. <b>Major</b> advantages (Magical, Rich) count as both. You must meet each prerequisite — skill prerequisites use your current skill values, so pick skills first if needed (Signature Weapon/Firearm, The Knowledge).</p>')}
-  <p><b>${slots}</b> of 2 choices used.</p>
+  <p><b>${slots}</b> of 2 creation choices used${slots?': '+S.adv.filter(id=>!S.dev.advBought.includes(id)&&advById(id)).map(id=>advById(id).n+(advById(id).major?' (major, 2)':'')).join(', '):''}.${S.dev.advBought.some(id=>hasAdv(id))?' Advantages bought with development points ('+S.dev.advBought.filter(id=>hasAdv(id)).map(id=>advById(id)?advById(id).n:id).join(', ')+') don’t use these choices.':''}</p>
   ${advHtml}
   <h4>Custom advantages</h4>
   ${customBlock('adv')}
@@ -1534,7 +1538,8 @@ const ACT={
  preset:x=>{ const v=x.split(',').map(Number); CHARS.forEach((c,i)=>S.ch[c]=v[i]); },
  chr:(c,y)=>{ const lo=S.opt.wide?20:30, hi=S.opt.wide?90:80; S.ch[c]=Math.min(hi,Math.max(lo,(+S.ch[c]||0)+(+y))); },
  rollLuck:()=>{ const a=d(10),b=d(10); S.luck.dice=[a,b]; S.luck.start=50+a+b; S.luck.cur=null; },
- toggleAdv:x=>{ if(hasAdv(x)){ S.adv=S.adv.filter(a=>a!==x); if(x==='magical'){ S.picks=S.picks.filter(p=>p.skill!=='Magic'); } }
+ toggleAdv:x=>{ if(hasAdv(x)&&S.dev.advBought.includes(x)){ alert('This advantage was bought with development points. Remove it with × in the Development history so the points are refunded.'); return; }
+   if(hasAdv(x)){ S.adv=S.adv.filter(a=>a!==x); if(x==='magical'){ S.picks=S.picks.filter(p=>p.skill!=='Magic'); } }
    else{ const a=advById(x); if(advSlots()+(a.major?2:1)>2){ alert('That would exceed two advantage choices. Remove one first.'); return; } S.adv.push(x);
      if(x==='rich') S.info.affluence='Rich'; if(x==='wealthy'&&S.info.affluence!=='Rich') S.info.affluence='Wealthy'; } },
  setPkg:x=>{ S.pkg.id=x; S.pkg.pts={}; if(!x) S.pkg.mode='points'; const P=PKG.find(p=>p.id===x); if(P&&P.occ&&!S.info.occ) S.info.occ=P.occ; },
