@@ -237,7 +237,7 @@ button.chip{cursor:pointer}
    ===================================================================== */
 
 /* App version — bump this for every release and tag the commit v<APP_VERSION>. Format: MAJOR.MINOR.PATCH, two digits each. */
-const APP_VERSION = '0.01.00';
+const APP_VERSION = '0.02.00';
 document.querySelectorAll('.app-ver').forEach(el=>el.textContent=APP_VERSION);
 
 const CHARS = ['STR','CON','DEX','INT','POW'];
@@ -357,6 +357,7 @@ const ADV = [
  {id:'silver',n:'Silver-Tongued',pre:{},d:'Bonus die on Social rolls to win someone over with eloquence and persuasion.'},
  {id:'speedy',n:'Speedy',pre:{DEX:60},d:'MOV 9 instead of 8.'},
  {id:'steadfast',n:'Steadfast',pre:{POW:60},d:'No impairment from stress, gunfire, gore or the supernatural (still from your own injuries or HTD).'},
+ {id:'linguist',n:'Linguist',house:1,pre:{},d:'House rule. Languages bought with development points start at your full INT instead of half INT. You still pay 1 DP for each language.'},
  {id:'knowledge',n:'The Knowledge',pre:{INT:60,skill:['Navigate',60]},d:'Nominate a city or area: bonus die on Navigate rolls there.',field:'City / area'},
  {id:'wealthy',n:'Wealthy',pre:{},d:'Wealthy affluence rating.'}
 ];
@@ -635,7 +636,9 @@ function devStep(v){ if(v<80) return {to:Math.min(80,v+10)}; if(v<90) return {to
 const customSkill = n => S.customSkills.find(c=>c.n===n);
 const allExpert = () => [...EXPERT, ...S.customSkills.map(c=>c.n)];
 const skillDesc = n => SKILL_DESC[n] || (customSkill(n)?.d ? customSkill(n).d+' (custom)' : customSkill(n) ? 'Custom skill.' : '');
-function newSkillStart(skill){ const cs=CHAR_FOR[skill]||(customSkill(skill)?[customSkill(skill).c]:['INT']); const c=cs.reduce((a,b)=>(+S.ch[b]>+S.ch[a]?b:a)); return {v:Math.floor((+S.ch[c]||0)/2),c}; }
+function newSkillStart(skill){ const cs=CHAR_FOR[skill]||(customSkill(skill)?[customSkill(skill).c]:['INT']); const c=cs.reduce((a,b)=>(+S.ch[b]>+S.ch[a]?b:a));
+  if(skill==='Languages'&&hasAdv('linguist')) return {v:+S.ch.INT||0,c:'INT',full:true,label:'INT, Linguist'};
+  return {v:Math.floor((+S.ch[c]||0)/2),c,label:'half '+c}; }
 function spellCounts(extra){ const n=[0,0,0,0,0,0,0], m=[0,0,0,0,0,0,0]; S.spells.forEach(s=>{ const d=spellByName(s.n); if(!d) return; n[d.o]++; if(s.m) m[d.o]++; }); if(extra) n[extra.o]++; return {n,m}; }
 function canLearn(sp){
   if(!hasMagicPick()) return 'needs the Magic skill';
@@ -1053,7 +1056,7 @@ const VIEWS={
  adv(){
   const slots=advSlots();
   const advHtml=ADV.map(a=>{ const on=hasAdv(a.id); const why=advCheck(a); const full=!on&&(slots+(a.major?2:1)>2);
-    return `<label class="opt ${on?'sel':''} ${(!on&&(why.length||full))?'no':''}"><input type="checkbox" data-a="toggleAdv" data-x="${a.id}" ${on?'checked':''}><div style="flex:1"><div class="t">${a.n}${a.major?' <span class="tag">major · 2 choices</span>':''}</div><div class="d">${esc(a.d)}</div>
+    return `<label class="opt ${on?'sel':''} ${(!on&&(why.length||full))?'no':''}"><input type="checkbox" data-a="toggleAdv" data-x="${a.id}" ${on?'checked':''}><div style="flex:1"><div class="t">${a.n}${a.major?' <span class="tag">major · 2 choices</span>':''}${a.house?' <span class="tag">house rule</span>':''}</div><div class="d">${esc(a.d)}</div>
       <div class="small muted">Prerequisite: ${Object.keys(a.pre).length?[...CHARS.filter(c=>a.pre[c]).map(c=>c+' '+a.pre[c]),a.pre.skill?a.pre.skill[0]+' '+a.pre.skill[1]+'%':null].filter(Boolean).join(', '):'none'}</div>
       ${why.length?`<div class="why">Not met: ${esc(why.join(', '))}</div>`:''}
       ${on&&a.field?`<div style="margin-top:6px">${fld(a.field,`<input type="text" data-b="advField.${a.id}" value="${esc(S.advField[a.id]||'')}">`)}</div>`:''}</div></label>`; }).join('');
@@ -1258,7 +1261,7 @@ const VIEWS={
       return `<tr><td>${esc(e.key)}</td><td class="n"><b>${e.total}</b>/${e.half}</td><td class="n">${why?`<span class="muted small">${why}</span>`:`<button class="btn sm" data-a="devRaise" data-x="${esc(e.key)}" ${can(1)?'':'disabled'}>→ ${st.to}% · 1 DP</button>`}</td>
         <td class="n">${!why&&e.total<80?`<button class="btn sm" data-a="devHalf" data-x="${esc(e.key)}" ${can(.5)?'':'disabled'}>→ ${Math.min(80,e.total+5)}% · ½ DP</button>`:''}</td></tr>`; }).join('');
     const knownKeys=new Set(sk.map(e=>e.key));
-    const newOpts=allExpert().filter(x=>x!=='Magic'&&(SPECIALISED.includes(x)||!knownKeys.has(x)||sk.find(e=>e.key===x).total===0)).map(x=>{ const s=newSkillStart(x); return `<option value="${x}">${x} — starts at ${s.v}% (½ ${s.c})</option>`; }).join('');
+    const newOpts=allExpert().filter(x=>x!=='Magic'&&(SPECIALISED.includes(x)||!knownKeys.has(x)||sk.find(e=>e.key===x).total===0)).map(x=>{ const s=newSkillStart(x); return `<option value="${x}">${x} — starts at ${s.v}% (${s.label})</option>`; }).join('');
     const learnable=hasMagicPick()?SPELLS.map(s=>({s,why:canLearn(s)})):[];
     const masterable=hasMagicPick()?S.spells.map(s=>({s,why:canMaster(s)})):[];
     const advs=ADV.filter(a=>!hasAdv(a.id)).map(a=>{ const w=advCheck(a); const c=a.major?10:5; return `<option value="${a.id}" ${w.length?'disabled':''}>${a.n} — ${c} DP${w.length?' (needs '+w.join(', ')+')':''}</option>`; }).join('');
@@ -1443,7 +1446,7 @@ const ACT={
    if(SPECIALISED.includes(sk)){ spec=document.getElementById('devSpec').value.trim(); if(!spec) return alert('Name the specialisation for '+sk+'.'); }
    const key=skillKey(sk,spec); if(skillVal(key)>0) return alert(key+' is already known — raise it instead.');
    if(!devSpend(1)) return; const st=newSkillStart(sk); S.extras.push({skill:sk,spec,dev:true}); S.adj[key]=(+S.adj[key]||0)+st.v; S.dev.phase.raised.push(key);
-   devLog('New skill: '+key+' at '+st.v+'% (half '+st.c+')',-1,{t:'new',k:key,amt:st.v}); },
+   devLog('New skill: '+key+' at '+st.v+'% ('+st.label+')',-1,{t:'new',k:key,amt:st.v}); },
  devLearn:()=>{ const n=document.getElementById('devLearn').value; if(!n) return; const sp=spellByName(n); const w=canLearn(sp); if(w) return alert(w); if(!devSpend(1)) return;
    S.spells.push({n,m:false}); S.spells.sort((a,b)=>spellByName(a.n).o-spellByName(b.n).o); S.dev.phase.learned=true; devLog('Learned spell: '+n,-1,{t:'learn',n}); },
  devMaster:()=>{ const n=document.getElementById('devMaster').value; if(!n) return; const s=S.spells.find(x=>x.n===n); const w=canMaster(s); if(w) return alert(w); if(!devSpend(1)) return;
