@@ -601,6 +601,12 @@ function computeSkills(){
   }
   if(isFae()) put('Sense Vestigia','common',60,'Sense Vestigia','fae');
   for(const x of S.extras){ put(skillKey(x.skill,x.spec),'expert',0,x.skill,'extra'); }
+  // Linguist (house rule) applies live to every language bought with DP, whenever it was learned:
+  // the stored start value is corrected to full INT (with Linguist) or half INT (without).
+  for(const l of S.dev.log){ const u=l.u; if(!u||u.t!=='new'||baseSkillOf(u.k)!=='Languages') continue;
+    const e=M.get(u.k); if(!e) continue;
+    const want=hasAdv('linguist')?(+INT||0):Math.floor((+INT||0)/2);
+    if(want!==u.amt){ e.base+=want-u.amt; if(hasAdv('linguist')) e.src.push('linguist'); } }
   const out=[];
   for(const e of M.values()){
     e.pkg=S.pkg.id&&S.pkg.mode==='points'?(+S.pkg.pts[e.key]||0):0;
@@ -1114,7 +1120,7 @@ const VIEWS={
   const addable=allExpert().filter(x=>!(pickSet.has(x)&&!SPECIALISED.includes(x)));
   const usedKeys=new Set(sk.map(e=>e.key));
   const customList=S.customSkills.map((c,i)=>`<div class="opt" style="align-items:center"><div style="flex:1"><div class="t">${esc(c.n)} <span class="tag">custom</span></div><div class="d small">${esc(c.d||'No description')} · learned in play at ½ ${esc(c.c)}</div></div>${usedKeys.has(c.n)?'<span class="small muted">in use</span>':`<button class="btn sm" data-a="delCustom" data-x="${i}">Delete</button>`}</div>`).join('');
-  const expertTable=sk.filter(e=>e.cat==='expert').sort((a,b)=>a.key.localeCompare(b.key)).map(e=>`<tr class="${e.picked?'picked':''}"><td>${esc(e.key)} <span class="muted small">${e.src.map(s=>({own:'own language',bilingual:'bilingual',pick:'starting skill',pick30:'secondary',extra:'added'}[s]||'')).filter(Boolean).join(', ')}</span></td><td class="n">${e.base}</td>${pts?`<td class="n">${pkgEligible(e.key)?`<input type="number" min="0" max="60" step="5" data-b="pkg.pts.${e.key}" data-t="n" data-r value="${e.pkg||''}">`:'<span class="muted">—</span>'}</td>`:''}<td class="n"><input type="number" data-b="adj.${e.key}" data-t="n" data-r value="${e.adjv||''}"></td><td class="n"><b>${e.total}</b>/${e.half}</td><td>${e.src.includes('extra')?`<button class="btn sm" data-a="rmExtra" data-x="${esc(e.key)}">×</button>`:''}</td></tr>`).join('');
+  const expertTable=sk.filter(e=>e.cat==='expert').sort((a,b)=>a.key.localeCompare(b.key)).map(e=>`<tr class="${e.picked?'picked':''}"><td>${esc(e.key)} <span class="muted small">${e.src.map(s=>({own:'own language',bilingual:'bilingual',pick:'starting skill',pick30:'secondary',extra:'added',linguist:'Linguist (full INT)'}[s]||'')).filter(Boolean).join(', ')}</span></td><td class="n">${e.base}</td>${pts?`<td class="n">${pkgEligible(e.key)?`<input type="number" min="0" max="60" step="5" data-b="pkg.pts.${e.key}" data-t="n" data-r value="${e.pkg||''}">`:'<span class="muted">—</span>'}</td>`:''}<td class="n"><input type="number" data-b="adj.${e.key}" data-t="n" data-r value="${e.adjv||''}"></td><td class="n"><b>${e.total}</b>/${e.half}</td><td>${e.src.includes('extra')?`<button class="btn sm" data-a="rmExtra" data-x="${esc(e.key)}">×</button>`:''}</td></tr>`).join('');
   const datalists=SPECIALISED.map(s=>`<datalist id="dl-${s.replace(/\W/g,'')}">${SPEC[s].map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`).join('');
   return ['Step 4 · Skills',`${datalists}
   ${rulesBox(`<ul>
