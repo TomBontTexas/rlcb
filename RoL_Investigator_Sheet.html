@@ -103,7 +103,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .srow .snm{flex:1;min-width:0}
 .srow .snm .sub{text-align:left}
 .srow .box2{width:15px;height:15px;border:1.5px solid var(--ink);border-radius:2px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1;flex:none;margin-bottom:3px}
-.lines{min-height:120px;white-space:pre-wrap;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 29px,var(--rule) 29px,var(--rule) 30px);line-height:30px;padding-top:0}
+.lines{min-height:120px;white-space:pre-wrap;line-height:30px;padding-top:0;background-color:var(--box);background-image:repeating-linear-gradient(to bottom,var(--box) 0,var(--box) 29px,var(--rule) 29px,var(--rule) 30px)} /* gaps use the box colour, not 'transparent': some print/PDF renderers (e.g. Safari) paint transparent gradient stops black */
 .lines.tall{min-height:300px}
 .lines.med{min-height:240px}
 .contacts{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
@@ -186,7 +186,7 @@ button.chip{cursor:pointer}
 .mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 
-@media (max-width:860px){
+@media screen and (max-width:860px){
   .c3,.c4,.c5,.c6,.c7,.c8{grid-column:span 12}
   .adv-list,.weap,.spells,.contacts{grid-template-columns:1fr}
   .grid2,.grid3{grid-template-columns:1fr}
@@ -194,11 +194,22 @@ button.chip{cursor:pointer}
   .charrow .mean{grid-column:1/-1}
   .portrait{max-width:220px;margin:10px auto}
 }
+@page{size:letter;margin:9mm}
 @media print{
+  /* always print on white, even when the device is in dark mode */
+  :root,:root[data-theme="dark"],:root:not([data-theme="light"]){--paper:#fff;--box:#fff;--ink:#1b2130;--muted:#5b6580;--line:#8fa3cf;--rule:#b9c4de;--chip:#e3e9f7;--navy:#1f3d8c;--navy-2:#2c4fa6}
   body{background:#fff;font-size:12px}
+  .lines{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .top,.foot,.update-banner{display:none!important}
   .wrap{max-width:none;padding:0}
-  .page{display:grid!important;break-after:page}
+  .page{display:grid!important;break-after:page;break-inside:avoid;gap:7px!important;zoom:.72}
+  .page:last-child{break-after:auto}
+  .box{break-inside:avoid}
+  .lines.tall{min-height:240px}.lines.med{min-height:180px}
+  .portrait{aspect-ratio:auto;height:230px}
+  .row,.fl,.wrow,.srow,.crow{min-height:0;padding-top:2px;padding-bottom:2px}
+  .bd{padding:5px 10px 6px}
+  .band{padding:5px 10px 4px}
   .box{box-shadow:none}
   .problems{display:none}
   .band{-webkit-print-color-adjust:exact;print-color-adjust:exact}
