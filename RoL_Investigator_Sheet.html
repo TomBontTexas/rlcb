@@ -863,7 +863,8 @@ function renderSheet(){
         <div class="row"><span class="nm"><b style="font-family:var(--head)">MOV</b></span><span class="fh"><b>${m.v}</b></span></div>
         <div class="row"><span class="nm">Luck</span>${fh(L??'',S.luck.cur??(L??''),'Starting·Current')}</div>
         <div class="row"><span class="nm">Magic Pts</span>${isFae()?'<span class="muted small">none (fae)</span>':fh(mp,S.mp.cur??mp,'Starting·Current')}</div>
-        <div class="row hot" data-open="develop" tabindex="0" title="Earn and spend development points"><span class="nm">Development Pts</span>${fh(half2(S.dev.pts),half2(devTotals().earned),'Banked·Earned')}</div>
+        <div class="row hot" data-open="develop" tabindex="0" title="Earn and spend development points"><span class="nm">Total DP Earned</span><span class="fh"><b>${half2(devTotals().earned)}</b></span></div>
+        <div class="row hot" data-open="develop" tabindex="0" title="Earn and spend development points"><span class="nm">DP Unspent</span><span class="fh"><b>${half2(S.dev.pts)}</b></span></div>
       </div>
     </div>
   </div>
@@ -941,7 +942,8 @@ function renderSheet(){
   const all=Object.values(V).flat(); const e=all.filter(x=>x.lvl==='err').length, w=all.filter(x=>x.lvl==='warn').length;
   const b=document.getElementById('statusBtn');
   b.innerHTML='Checklist '+(e?`<span class="status err">${e} to fix</span>`:w?`<span class="status warn">${w} to review</span>`:'<span class="status ok">complete</span>');
-  document.getElementById('devBtn').innerHTML='Development'+(S.dev.pts?` <span class="status ok">${String(S.dev.pts).replace('.5','½')} DP</span>`:'')+(S.dev.phase?' <span class="status warn">phase open</span>':'');
+  const DT=devTotals();
+  document.getElementById('devBtn').innerHTML='Development'+(DT.earned?` <span class="status ok">${half2(S.dev.pts)} of ${half2(DT.earned)} DP left</span>`:'')+(S.dev.phase?' <span class="status warn">phase open</span>':'');
   document.title=(S.info.name?S.info.name+' · ':'')+'Investigator Sheet';
 }
 function backstorySummary(){
