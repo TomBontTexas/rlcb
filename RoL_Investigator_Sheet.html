@@ -1585,6 +1585,9 @@ function setPath(path,v){
   const last=ks.at(-1);
   if((path.startsWith('pkg.pts.')||path.startsWith('adj.'))&&(v==null||v===0)){ delete o[last]; return; }
   o[last]=v;
+  // a contact is Secure, Sour, or neither, never both
+  const m=path.match(/^contacts\.(\d+)\.(secure|sour)$/);
+  if(m&&v===true) S.contacts[+m[1]][m[2]==='secure'?'sour':'secure']=false;
 }
 dlg.addEventListener('close',()=>{ document.documentElement.classList.remove('modal-open'); renderSheet(); });
 document.getElementById('fileIn').addEventListener('change',e=>{
