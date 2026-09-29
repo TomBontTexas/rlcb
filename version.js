@@ -5,4 +5,4 @@
    every check, and re-declaring a const throws.
    Format MAJOR.MINOR.PATCH, two digits each: bump the middle number for new
    features, the last number for bug fixes. Tag each release v<version>. */
-var LATEST_APP_VERSION = "0.04.04";
+var LATEST_APP_VERSION = "0.05.00";
