@@ -268,6 +268,8 @@ button.chip{cursor:pointer}
 
 /* App version: the source of truth is version.js (loaded just before this script) so checkForUpdate() can re-read it cheaply. */
 const APP_VERSION = (typeof LATEST_APP_VERSION!=='undefined') ? LATEST_APP_VERSION : 'dev';
+/* App tag: prefixes every file this app saves (RLCB_…json) so they're recognisable in a shared Downloads folder. */
+const APP_TAG = 'RLCB';
 document.querySelectorAll('.app-ver').forEach(el=>el.textContent=APP_VERSION);
 
 const CHARS = ['STR','CON','DEX','INT','POW'];
@@ -1531,7 +1533,7 @@ const ACT={
  dupChar:()=>{ const id=uid(); const c=JSON.parse(JSON.stringify(S)); c.info.name=(c.info.name||'Investigator')+' (copy)'; roster.chars[id]=c; roster.cur=id; S=c; },
  switchChar:x=>{ roster.cur=x; S=roster.chars[x]; },
  delChar:x=>{ const c=roster.chars[x]; if(!confirm('Delete '+(c.info?.name||'this investigator')+'? This cannot be undone.')) return; delete roster.chars[x]; if(roster.cur===x){ const ids=Object.keys(roster.chars); if(ids.length){ roster.cur=ids[0]; S=roster.chars[ids[0]]; } else { const id=uid(); roster.chars[id]=blank(); roster.cur=id; S=roster.chars[id]; } } },
- exportChar:()=>{ const blob=new Blob([JSON.stringify({...S,appVersion:APP_VERSION},null,1)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=(S.info.name||'investigator').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_')+'.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); },
+ exportChar:()=>{ const blob=new Blob([JSON.stringify({...S,appVersion:APP_VERSION},null,1)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=APP_TAG+'_'+((S.info.name||'investigator').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_')||'investigator')+'.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); },
  importChar:()=>document.getElementById('jsonIn').click()
 };
 
