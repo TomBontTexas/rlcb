@@ -7,6 +7,6 @@
      product (major) up -> feature and bug fix reset to 00
      feature up         -> bug fix resets to 00
      bug fix up         -> just that number
-   Bump with tools/bump_version.py (product | feature | bugfix | set X.YY.ZZ).
+   Bump with ~/.claude/tools/bump_version.py (product | feature | bugfix | set X.YY.ZZ).
    Tag each release v<version>. */
 var LATEST_APP_VERSION = "0.05.00";
