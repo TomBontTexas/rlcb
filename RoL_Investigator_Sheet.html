@@ -1322,7 +1322,7 @@ const VIEWS={
  },
  backstory(){
   const b=S.back;
-  const radio=q=>`<div style="margin-bottom:12px"><div class="t" style="font-weight:600">${esc(q.q)}</div>${q.o.map(([t,d])=>`<label class="opt ${b[q.k]===t?'sel':''}"><input type="radio" name="${q.k}" data-b="back.${q.k}" value="${esc(t)}" ${b[q.k]===t?'checked':''}><div><div class="t">${esc(t)}</div><div class="d">${esc(d)}</div></div></label>`).join('')}</div>`;
+  const radio=q=>`<div style="margin-bottom:12px"><div class="t" style="font-weight:600">${esc(q.q)} ${b[q.k]?'<span class="small muted" style="font-weight:400">(click your choice again to clear it)</span>':''}</div>${q.o.map(([t,d])=>`<label class="opt ${b[q.k]===t?'sel':''}"><input type="radio" name="${q.k}" data-b="back.${q.k}" data-clearable value="${esc(t)}" ${b[q.k]===t?'checked':''}><div><div class="t">${esc(t)}</div><div class="d">${esc(d)}</div></div></label>`).join('')}</div>`;
   const text=q=>fld(q.q,`<input type="text" data-b="back.${q.k}" value="${esc(b[q.k])}">`);
   return ['Step 5 · Backstory',`
   ${rulesBox('<p>Everything past and present: family, home, friends, habits, schooling, career. You don’t need it all now — like Peter Grant, much can be revealed in play. Use these prompts as a springboard; skip any you like.</p>')}
@@ -1635,6 +1635,10 @@ dBody.addEventListener('input',e=>{
   if(el.type==='checkbox'||el.type==='radio'||el.tagName==='SELECT') return;
   let v=el.value; if(el.dataset.t==='n'){ v=el.value===''?null:+el.value; }
   setPath(el.dataset.b,v); softRefresh();
+});
+dBody.addEventListener('click',e=>{
+  const el=e.target;
+  if(el.matches('input[type=radio][data-clearable]')&&get(el.dataset.b)===el.value){ setPath(el.dataset.b,''); refresh(); }
 });
 dBody.addEventListener('change',e=>{
   const el=e.target;
