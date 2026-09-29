@@ -1152,7 +1152,7 @@ const VIEWS={
   };
   const addable=allExpert().filter(x=>!(pickSet.has(x)&&!SPECIALISED.includes(x)));
   const usedKeys=new Set(sk.map(e=>e.key));
-  const customList=S.customSkills.map((c,i)=>`<div class="opt" style="align-items:center"><div style="flex:1"><div class="t">${esc(c.n)} <span class="tag">custom</span></div><div class="d small">${esc(c.d||'No description')} · learned in play at ½ ${esc(c.c)}</div></div>${usedKeys.has(c.n)?'<span class="small muted">in use</span>':`<button class="btn sm" data-a="delCustom" data-x="${i}">Delete</button>`}</div>`).join('');
+  const customList=S.customSkills.map((c,i)=>`<div class="opt" style="align-items:center"><div style="flex:1"><div class="t">${esc(c.n)} <span class="tag">custom</span></div><div class="d small">${esc(c.d||'No description')} · learned in play at ½ ${esc(c.c)}</div></div>${usedKeys.has(c.n)?'<span class="tag">on this character</span>':`<button class="btn sm" data-a="delCustom" data-x="${i}">Delete</button>`}</div>`).join('');
   const expertTable=sk.filter(e=>e.cat==='expert').sort((a,b)=>a.key.localeCompare(b.key)).map(e=>`<tr class="${e.picked?'picked':''}"><td>${esc(e.key)} <span class="muted small">${e.src.map(s=>({own:'own language',bilingual:'bilingual',pick:'starting skill',pick30:'secondary',extra:'added',dev:'learned in play',linguist:'Linguist (full INT)'}[s]||'')).filter(Boolean).join(', ')}</span></td><td class="n">${e.base}</td>${pts?`<td class="n">${pkgEligible(e.key)?`<input type="number" min="0" max="60" step="5" data-b="pkg.pts.${e.key}" data-t="n" data-r value="${e.pkg||''}">`:'<span class="muted">—</span>'}</td>`:''}<td class="n"><input type="number" data-b="adj.${e.key}" data-t="n" data-r value="${e.adjv||''}"></td><td class="n"><b>${e.total}</b>/${e.half}</td><td>${e.src.includes('extra')?`<button class="btn icon-btn" aria-label="Remove skill" title="Remove this skill" data-a="rmExtra" data-x="${esc(e.key)}">×</button>`:''}</td></tr>`).join('');
   const datalists=SPECIALISED.map(s=>`<datalist id="dl-${s.replace(/\W/g,'')}">${SPEC[s].map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`).join('');
   return ['Step 4 · Skills',`${datalists}
@@ -1176,9 +1176,10 @@ const VIEWS={
   <div class="row-flex" style="margin-top:6px"><select id="addExpert" style="width:auto"><option value="">Add an expert skill…</option>${addable.map(x=>{ const dis=x==='Magic'&&(!hasAdv('magical')||isFae()); return `<option value="${x}" ${dis?'disabled':''}>${x}${dis?' (needs Magical)':''}</option>`; }).join('')}</select>
    <button class="btn primary" data-a="addExpert" ${S.picks.length>=lim?'disabled':''}>Add as starting skill</button>
    <button class="btn" data-a="addExtra" title="Adds the skill at 0% — for package points or skills learned in play">Add at 0% (package / in play)</button></div>
-  <h4 data-f="custom">Custom expert skill</h4>
+  <h4 data-f="custom">Custom skills</h4>
   ${rulesBox('<p>With the GM’s approval you can create an expert skill that isn’t in the book (p. 321), e.g. <i>Anthropology</i>, <i>Heraldry</i>, <i>Brewing</i>. First check whether an existing skill or specialisation already covers it. Agree with the GM what it does, what opposes it, and what Regular and Hard tasks look like.</p>')}
-  ${customList}
+  ${customList?`<div class="fld" style="margin:4px 0"><span>Custom skills list</span></div><p class="small muted" style="margin-top:0">Skills you’ve created. Ones marked “on this character” are on the sheet; the rest are defined but <b>not</b> on the character. Add one with “Add an expert skill…” above.</p>${customList}`:''}
+  <div class="fld" style="margin:10px 0 4px"><span>Create a custom skill</span></div>
   <div class="grid3">
    ${fld('Skill name','<input type="text" id="cusName" placeholder="e.g. Heraldry">')}
    ${fld('Characteristic (for learning it later)',`<select id="cusChar">${CHARS.map(c=>`<option ${c==='INT'?'selected':''}>${c}</option>`).join('')}</select>`)}
@@ -1202,7 +1203,7 @@ const VIEWS={
   const lib=roster.weaponLib||[];
   const opts=`<optgroup label="Table 3: Weapons">${WEAPONS.map((x,j)=>`<option value="w${j}">${esc(x.n)}</option>`).join('')}</optgroup>`
     +`<optgroup label="Spell attacks">${SPELLS.filter(s=>s.atk).map(s=>`<option value="s${esc(s.n)}">${esc(s.n)}</option>`).join('')}</optgroup>`
-    +(lib.length?`<optgroup label="My weapons">${lib.map((x,j)=>`<option value="l${j}">${esc(x.n)}</option>`).join('')}</optgroup>`:'');
+    +(lib.length?`<optgroup label="Custom weapons list">${lib.map((x,j)=>`<option value="l${j}">${esc(x.n)}</option>`).join('')}</optgroup>`:'');
   const sig=hasAdv('sigweap')||hasAdv('sigfire');
   const skills=[...new Set(['Fighting','Firearms','Athletics','Magic',...computeSkills().map(e=>e.key),w.sk].filter(Boolean))];
   const inLib=w.n&&lib.some(x=>x.n===w.n);
@@ -1228,10 +1229,10 @@ const VIEWS={
   <div class="row-flex">
    ${i>0?`<button class="btn" data-a="open" data-x="weapon" data-y="${i-1}">← Previous</button>`:''}
    ${i<n-1?`<button class="btn" data-a="open" data-x="weapon" data-y="${i+1}">Next →</button>`:'<button class="btn" data-a="addWeapon">+ Add another weapon</button>'}
-   <button class="btn" data-a="saveWeaponLib" data-x="${i}" ${w.n?'':'disabled'} title="Save these stats so you can add this weapon to any character">${inLib?'Update in My weapons':'Save to My weapons'}</button>
+   <button class="btn" data-a="saveWeaponLib" data-x="${i}" ${w.n?'':'disabled'} title="Save these stats so you can add this weapon to any character">${inLib?'Update in custom weapons list':'Save to custom weapons list'}</button>
    <button class="btn" data-a="delWeapon" data-x="${i}">Delete weapon</button>
   </div>
-  ${lib.length?`<h4>My weapons</h4><p class="small muted">Saved in this browser and shared by all your characters. Pick one from “Fill in from a list” above.</p>${lib.map((x,j)=>`<div class="opt" style="align-items:center"><div style="flex:1"><div class="t">${esc(x.n)}</div><div class="d small">${esc(x.sk)} · damage ${esc(String(x.dm))} · ${x.thrown?'thrown':'range '+esc(String(x.rg||'—'))}${x.auto?' · auto':''}${x.note?' · '+esc(x.note):''}</div></div><button class="btn sm" data-a="delWeaponLib" data-x="${j}">Remove</button></div>`).join('')}`:''}`];
+  ${lib.length?`<h4>Custom weapons list</h4><p class="small muted">Weapons you’ve created and saved for re-use. These are <b>not</b> the weapons this character carries; those are on the sheet. To give one to this character, pick it from “Fill in from a list” above. The list is saved in this browser and shared by all your characters.</p>${lib.map((x,j)=>`<div class="opt" style="align-items:center"><div style="flex:1"><div class="t">${esc(x.n)}</div><div class="d small">${esc(x.sk)} · damage ${esc(String(x.dm))} · ${x.thrown?'thrown':'range '+esc(String(x.rg||'—'))}${x.auto?' · auto':''}${x.note?' · '+esc(x.note):''}</div></div><button class="btn sm" data-a="delWeaponLib" data-x="${j}">Remove</button></div>`).join('')}`:''}`];
  },
  spells(){
   const known={}; S.spells.forEach(s=>known[s.n]=!!s.m);
