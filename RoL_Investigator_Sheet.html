@@ -46,6 +46,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .btn{border:1px solid var(--line);background:var(--box);padding:6px 11px;border-radius:8px;cursor:pointer;font-family:var(--head);font-size:13px;letter-spacing:.04em}
 .btn:hover{border-color:var(--hot-line)}
 .btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.icon-btn{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:22px;font-weight:400;line-height:1;min-width:34px;min-height:34px;padding:2px 8px;display:inline-flex;align-items:center;justify-content:center;letter-spacing:0;vertical-align:middle}
+.btn.icon-btn.pen{font-size:18px}
 .btn.sm{padding:3px 8px;font-size:12px}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .status{font-family:var(--head);font-size:12px;padding:3px 9px;border-radius:99px;border:1px solid currentColor}
@@ -622,7 +624,7 @@ function computeSkills(){
     put(p.skill,'expert',60,p.skill,'pick');
   }
   if(isFae()) put('Sense Vestigia','common',60,'Sense Vestigia','fae');
-  for(const x of S.extras){ put(skillKey(x.skill,x.spec),'expert',0,x.skill,'extra'); }
+  for(const x of S.extras){ put(skillKey(x.skill,x.spec),'expert',0,x.skill,x.dev?'dev':'extra'); } // 'dev' = bought with DP: removed only via Development history
   // Linguist (house rule) applies live to every language bought with DP, whenever it was learned:
   // the stored start value is corrected to full INT (with Linguist) or half INT (without).
   for(const l of S.dev.log){ const u=l.u; if(!u||u.t!=='new'||baseSkillOf(u.k)!=='Languages') continue;
@@ -1146,7 +1148,7 @@ const VIEWS={
   const addable=allExpert().filter(x=>!(pickSet.has(x)&&!SPECIALISED.includes(x)));
   const usedKeys=new Set(sk.map(e=>e.key));
   const customList=S.customSkills.map((c,i)=>`<div class="opt" style="align-items:center"><div style="flex:1"><div class="t">${esc(c.n)} <span class="tag">custom</span></div><div class="d small">${esc(c.d||'No description')} · learned in play at ½ ${esc(c.c)}</div></div>${usedKeys.has(c.n)?'<span class="small muted">in use</span>':`<button class="btn sm" data-a="delCustom" data-x="${i}">Delete</button>`}</div>`).join('');
-  const expertTable=sk.filter(e=>e.cat==='expert').sort((a,b)=>a.key.localeCompare(b.key)).map(e=>`<tr class="${e.picked?'picked':''}"><td>${esc(e.key)} <span class="muted small">${e.src.map(s=>({own:'own language',bilingual:'bilingual',pick:'starting skill',pick30:'secondary',extra:'added',linguist:'Linguist (full INT)'}[s]||'')).filter(Boolean).join(', ')}</span></td><td class="n">${e.base}</td>${pts?`<td class="n">${pkgEligible(e.key)?`<input type="number" min="0" max="60" step="5" data-b="pkg.pts.${e.key}" data-t="n" data-r value="${e.pkg||''}">`:'<span class="muted">—</span>'}</td>`:''}<td class="n"><input type="number" data-b="adj.${e.key}" data-t="n" data-r value="${e.adjv||''}"></td><td class="n"><b>${e.total}</b>/${e.half}</td><td>${e.src.includes('extra')?`<button class="btn sm" data-a="rmExtra" data-x="${esc(e.key)}">×</button>`:''}</td></tr>`).join('');
+  const expertTable=sk.filter(e=>e.cat==='expert').sort((a,b)=>a.key.localeCompare(b.key)).map(e=>`<tr class="${e.picked?'picked':''}"><td>${esc(e.key)} <span class="muted small">${e.src.map(s=>({own:'own language',bilingual:'bilingual',pick:'starting skill',pick30:'secondary',extra:'added',dev:'learned in play',linguist:'Linguist (full INT)'}[s]||'')).filter(Boolean).join(', ')}</span></td><td class="n">${e.base}</td>${pts?`<td class="n">${pkgEligible(e.key)?`<input type="number" min="0" max="60" step="5" data-b="pkg.pts.${e.key}" data-t="n" data-r value="${e.pkg||''}">`:'<span class="muted">—</span>'}</td>`:''}<td class="n"><input type="number" data-b="adj.${e.key}" data-t="n" data-r value="${e.adjv||''}"></td><td class="n"><b>${e.total}</b>/${e.half}</td><td>${e.src.includes('extra')?`<button class="btn icon-btn" aria-label="Remove skill" title="Remove this skill" data-a="rmExtra" data-x="${esc(e.key)}">×</button>`:''}</td></tr>`).join('');
   const datalists=SPECIALISED.map(s=>`<datalist id="dl-${s.replace(/\W/g,'')}">${SPEC[s].map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`).join('');
   return ['Step 4 · Skills',`${datalists}
   ${rulesBox(`<ul>
@@ -1350,7 +1352,7 @@ const VIEWS={
     const ex=u.t==='new'&&S.extras.find(e=>e.dev&&skillKey(e.skill,e.spec)===u.k);
     const ren=ex&&SPECIALISED.includes(ex.skill);
     return `<tr><td class="small muted">${l.ph?'':'between phases'}</td><td>${esc(l.t)}</td><td class="n ${l.dp>0?'':'muted'}">${l.dp>0?'+':''}${l.dp?fmt(l.dp):''}</td>
-    <td class="n" style="white-space:nowrap">${ren?`<button class="btn sm" data-a="devRename" data-x="${i}" title="Change the specialisation (e.g. which language)">✎</button> `:''}<button class="btn sm" data-a="devDel" data-x="${i}" ${canDel?'':'disabled title="Those points have already been spent"'} title="Remove this entry and refund its points" aria-label="Remove entry">×</button></td></tr>`; }).join('');
+    <td class="n" style="white-space:nowrap">${ren?`<button class="btn icon-btn pen" aria-label="Change specialisation" data-a="devRename" data-x="${i}" title="Change the specialisation (e.g. which language)">✎</button> `:''}<button class="btn icon-btn" data-a="devDel" data-x="${i}" ${canDel?'':'disabled title="Those points have already been spent"'} title="Remove this entry and refund its points" aria-label="Remove entry">×</button></td></tr>`; }).join('');
   return ['Development',`
   ${rulesBox('<p>Rivers of London uses <b>development points (DP)</b>, not experience points (p. 120). The GM normally awards <b>1 DP per session</b> (more or fewer to suit the group), plus at most 1 DP for training between case files. You spend them in a <b>development phase</b> at the end of a case file or campaign chapter.</p>')}
   <div class="row-flex" style="justify-content:space-between">
