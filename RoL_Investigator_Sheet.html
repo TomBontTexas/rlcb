@@ -442,6 +442,7 @@ const PKG = [
  {id:'experienced',n:'Experienced Investigator',occ:null,any:1,d:'Any occupation. 60 points on any skills, or one extra new skill at 60%.'},
  {id:'paranormal',n:'Paranormal',occ:'parapsych',soft:1,d:'Knows the demi-monde through books or contact (other occupations with GM consent).'},
  {id:'police',n:'Police',occ:'police',d:'Years on the force, or recently retired.'},
+ {id:'educated',n:'Well Educated',occ:null,any:1,house:1,d:'House rule. Any occupation. 60 extra points to spend on any skills (no skill above 80% this way), in exchange for one disadvantage.'},
  {id:'spellcaster',n:'Spellcaster',occ:null,spell:1,d:'Requires Magical. Magic starts at 70%; three first-order spells (1 mastered) and two second-order spells (1 mastered).'}
 ];
 
@@ -1185,7 +1186,7 @@ const VIEWS={
   <h4>Experience package (optional, GM’s permission)</h4>
   ${rulesBox('<p>For more experienced investigators. Most packages give <b>60 extra skill points</b> for required/recommended skills (no skill above 80% this way). Every package <b>requires one disadvantage</b>.</p>')}
   <label class="opt ${!pk?'sel':''}"><input type="radio" name="pkg" data-a="setPkg" data-x="" ${!pk?'checked':''}><div><div class="t">No package</div><div class="d">Standard character creation.</div></div></label>
-  ${PKG.map(p=>`<label class="opt ${pk===p.id?'sel':''}"><input type="radio" name="pkg" data-a="setPkg" data-x="${p.id}" ${pk===p.id?'checked':''}><div style="flex:1"><div class="t">${p.n}</div><div class="d">${esc(p.d)}${p.occ?' Occupation: '+esc(occById(p.occ).n)+'.':''}</div>
+  ${PKG.map(p=>`<label class="opt ${pk===p.id?'sel':''}"><input type="radio" name="pkg" data-a="setPkg" data-x="${p.id}" ${pk===p.id?'checked':''}><div style="flex:1"><div class="t">${p.n}${p.house?' <span class="tag">house rule</span>':''}</div><div class="d">${esc(p.d)}${p.occ?' Occupation: '+esc(occById(p.occ).n)+'.':''}</div>
    ${pk==='experienced'&&p.id==='experienced'?`<div class="row-flex small" style="margin-top:6px"><label><input type="radio" name="pmode" data-b="pkg.mode" value="points" ${S.pkg.mode==='points'?'checked':''}> 60 points on any skills</label><label><input type="radio" name="pmode" data-b="pkg.mode" value="newskill" ${S.pkg.mode==='newskill'?'checked':''}> one extra new skill at 60% (7 picks)</label></div>`:''}</div></label>`).join('')}
   <h4>Disadvantage ${pk?'(required: choose one)':'(only with a package)'}</h4>
   ${pk&&!S.disList.length?'<p class="msg err">Your experience package needs a disadvantage.</p>':''}
