@@ -77,7 +77,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .fh i{font-style:normal;color:var(--muted);min-width:2ch;font-size:15px}
 .fh .sl{color:var(--muted)}
 .sub{display:block;font-family:var(--head);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right;margin-top:-2px}
-.portrait{aspect-ratio:3/3.6;display:flex;align-items:center;justify-content:center;background:var(--paper);margin:10px;border:1px solid var(--line);border-radius:3px;overflow:hidden;color:var(--muted);font-family:var(--head);font-size:13px;text-align:center}
+.portrait{aspect-ratio:2/3;height:300px;width:auto;max-width:calc(100% - 20px);margin:10px auto!important;display:flex;align-items:center;justify-content:center;background:var(--paper);border:1px solid var(--line);border-radius:3px;overflow:hidden;color:var(--muted);font-family:var(--head);font-size:13px;text-align:center}
 .portrait img{width:100%;height:100%;object-fit:cover}
 .logo{font-family:var(--head);text-align:center;padding:10px 8px 0;color:var(--navy);line-height:1.05}
 .logo .l1{font-size:28px;letter-spacing:.08em;font-weight:700}
@@ -192,7 +192,7 @@ button.chip{cursor:pointer}
   .grid2,.grid3{grid-template-columns:1fr}
   .charrow{grid-template-columns:1fr auto}
   .charrow .mean{grid-column:1/-1}
-  .portrait{max-width:220px;margin:10px auto}
+  .portrait{height:270px}
 }
 @page{size:letter;margin:9mm}
 @media print{
@@ -206,7 +206,7 @@ button.chip{cursor:pointer}
   .page:last-child{break-after:auto}
   .box{break-inside:avoid}
   .lines.tall{min-height:240px}.lines.med{min-height:180px}
-  .portrait{aspect-ratio:auto;height:230px}
+  .portrait{height:230px}  /* still 2:3, just smaller so the Front fits one page */
   .row,.fl,.wrow,.srow,.crow{min-height:0;padding-top:2px;padding-bottom:2px}
   .bd{padding:5px 10px 6px}
   .band{padding:5px 10px 4px}
@@ -1019,7 +1019,7 @@ const VIEWS={
   <div style="margin-top:10px">${fld('Notes',`<textarea data-b="info.notes" data-f="notes" placeholder="Appearance, mannerisms, anything else">${esc(S.info.notes)}</textarea>`)}</div>
   <h4>Portrait</h4>
   <div class="row-flex" data-f="portrait">
-    ${S.info.portrait?`<img src="${S.info.portrait}" alt="" style="width:90px;height:108px;object-fit:cover;border-radius:4px;border:1px solid var(--line)">`:''}
+    ${S.info.portrait?`<img src="${S.info.portrait}" alt="" style="width:90px;height:135px;object-fit:cover;border-radius:4px;border:1px solid var(--line)">`:''}
     <button class="btn" data-a="portrait">${S.info.portrait?'Replace image…':'Upload image…'}</button>
     ${S.info.portrait?'<button class="btn" data-a="portraitClear">Remove</button>':''}
   </div>
