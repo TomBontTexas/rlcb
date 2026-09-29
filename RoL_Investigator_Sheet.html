@@ -1,0 +1,1533 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Investigator Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+:root{
+  --navy:#1f3d8c; --navy-2:#2c4fa6; --line:#8fa3cf; --rule:#b9c4de;
+  --paper:#e9edf5; --box:#fbfcff; --ink:#1b2130; --muted:#5b6580;
+  --hot:rgba(44,79,166,.07); --hot-line:#2c4fa6;
+  --ok:#2d7a4c; --warn:#a86400; --err:#b3261e; --chip:#e3e9f7;
+  --band-ink:#fff; --shadow:0 1px 2px rgba(20,30,60,.08),0 6px 24px rgba(20,30,60,.08);
+  --head:'Josefin Sans',system-ui,sans-serif; --body:'EB Garamond',Georgia,serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --navy:#2a4aa3; --navy-2:#3a5fc0; --line:#3e4d73; --rule:#34405e;
+    --paper:#10141d; --box:#171d2a; --ink:#e5e9f3; --muted:#9aa5c0;
+    --hot:rgba(120,150,235,.10); --hot-line:#7f9df0; --chip:#222b40;
+    --ok:#5cc28a; --warn:#e0a24a; --err:#f07a70; --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --navy:#2a4aa3; --navy-2:#3a5fc0; --line:#3e4d73; --rule:#34405e;
+  --paper:#10141d; --box:#171d2a; --ink:#e5e9f3; --muted:#9aa5c0;
+  --hot:rgba(120,150,235,.10); --hot-line:#7f9df0; --chip:#222b40;
+  --ok:#5cc28a; --warn:#e0a24a; --err:#f07a70; --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.35}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:12px 16px 60px}
+
+/* ---------- top bar ---------- */
+.top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.brand{font-family:var(--head);font-weight:700;letter-spacing:.06em;color:var(--navy);font-size:22px;text-transform:uppercase;line-height:1}
+.brand small{display:block;font-weight:400;font-size:12px;letter-spacing:.12em;color:var(--muted);margin-top:4px}
+.tabs{display:flex;gap:4px;background:var(--box);border:1px solid var(--line);border-radius:10px;padding:4px}
+.tab{border:0;background:transparent;padding:7px 18px;border-radius:7px;font-family:var(--head);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:14px;cursor:pointer;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--navy);color:#fff}
+.tools{display:flex;flex-wrap:wrap;gap:6px}
+.btn{border:1px solid var(--line);background:var(--box);padding:6px 11px;border-radius:8px;cursor:pointer;font-family:var(--head);font-size:13px;letter-spacing:.04em}
+.btn:hover{border-color:var(--hot-line)}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.sm{padding:3px 8px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.status{font-family:var(--head);font-size:12px;padding:3px 9px;border-radius:99px;border:1px solid currentColor}
+.status.ok{color:var(--ok)} .status.warn{color:var(--warn)} .status.err{color:var(--err)}
+
+/* ---------- sheet ---------- */
+.page{display:none}
+.page.on{display:grid}
+.front{grid-template-columns:repeat(12,1fr);gap:12px}
+.back{grid-template-columns:repeat(12,1fr);gap:12px}
+.c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
+.stack{display:flex;flex-direction:column;gap:12px}
+.box{background:var(--box);border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow);overflow:hidden;position:relative}
+.band{margin:0;background:var(--navy);color:var(--band-ink);font-family:var(--head);font-weight:600;text-transform:uppercase;letter-spacing:.09em;font-size:17px;padding:7px 12px 5px;display:flex;align-items:center;gap:8px}
+.band .ico{opacity:.85;font-size:15px}
+.band .hint{margin-left:auto;font-size:11px;letter-spacing:.06em;opacity:.75;font-weight:400}
+.bd{padding:8px 12px 10px}
+.hot{cursor:pointer;transition:background .12s, outline-color .12s;outline:2px solid transparent;outline-offset:-2px}
+.hot:hover{background:var(--hot);outline-color:var(--hot-line)}
+.hot:focus-visible{outline-color:var(--hot-line)}
+.fl{display:flex;align-items:flex-end;gap:8px;min-height:30px;border-bottom:1px solid var(--rule);padding:3px 2px}
+.fl>label{font-family:var(--head);font-size:13px;color:var(--muted);white-space:nowrap;padding-bottom:1px}
+.fl>.v{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fl.hot{border-radius:3px}
+.muted{color:var(--muted)}
+.ph{color:var(--muted);font-style:italic;opacity:.8}
+.fh{display:inline-flex;align-items:flex-end;gap:3px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fh b{font-weight:600;min-width:2ch;text-align:right;font-size:18px}
+.fh i{font-style:normal;color:var(--muted);min-width:2ch;font-size:15px}
+.fh .sl{color:var(--muted)}
+.sub{display:block;font-family:var(--head);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right;margin-top:-2px}
+.portrait{aspect-ratio:3/3.6;display:flex;align-items:center;justify-content:center;background:var(--paper);margin:10px;border:1px solid var(--line);border-radius:3px;overflow:hidden;color:var(--muted);font-family:var(--head);font-size:13px;text-align:center}
+.portrait img{width:100%;height:100%;object-fit:cover}
+.logo{font-family:var(--head);text-align:center;padding:10px 8px 0;color:var(--navy);line-height:1.05}
+.logo .l1{font-size:28px;letter-spacing:.08em;font-weight:700}
+.logo .l2{font-size:13px;letter-spacing:.2em;color:var(--muted)}
+.row{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;border-bottom:1px solid var(--rule);padding:4px 2px;min-height:32px}
+.row .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row.boost .nm::after{content:"●";color:var(--navy-2);font-size:9px;vertical-align:super;margin-left:3px}
+.chars .row .nm b{font-family:var(--head);font-weight:700}
+.tick{display:inline-flex;align-items:center;gap:6px;padding:3px 0}
+.box input[type=checkbox]{width:16px;height:16px;accent-color:var(--navy)}
+.adv-list{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+.adv-list .fl{min-height:28px}
+.tag{display:inline-block;font-family:var(--head);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:1px 6px;border-radius:99px;background:var(--chip);color:var(--muted);margin-left:6px;vertical-align:middle}
+.tag.dis{background:transparent;border:1px solid var(--err);color:var(--err)}
+.weap{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+.wrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:10px;align-items:end;border-bottom:1px solid var(--rule);padding:4px 2px;min-height:34px}
+.wrow .col{text-align:center;font-variant-numeric:tabular-nums;min-width:44px}
+.wrow .col .sub{text-align:center}
+.spells{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+.srow{display:flex;gap:10px;align-items:end;border-bottom:1px solid var(--rule);padding:4px 2px;min-height:32px}
+.srow .ord{width:40px;text-align:center;font-family:var(--head);color:var(--muted)}
+.srow .ord .sub{text-align:center}
+.srow .snm{flex:1;min-width:0}
+.srow .snm .sub{text-align:left}
+.srow .box2{width:15px;height:15px;border:1.5px solid var(--ink);border-radius:2px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1;flex:none;margin-bottom:3px}
+.lines{min-height:120px;white-space:pre-wrap;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 29px,var(--rule) 29px,var(--rule) 30px);line-height:30px;padding-top:0}
+.lines.tall{min-height:300px}
+.lines.med{min-height:240px}
+.contacts{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+.crow{display:flex;gap:10px;align-items:end;border-bottom:1px solid var(--rule);padding:4px 2px;min-height:34px}
+.crow .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow .ss{font-family:var(--head);font-size:11px;letter-spacing:.06em;color:var(--muted);white-space:nowrap}
+.crow .ss .on{color:var(--ink);font-weight:700}
+.problems{position:absolute;top:6px;right:8px;width:10px;height:10px;border-radius:50%}
+.problems.err{background:var(--err)} .problems.warn{background:var(--warn)}
+.dmg .tick{font-size:18px;display:flex}
+.dmg .tick.off{opacity:.35;text-decoration:line-through}
+.foot{font-size:11px;color:var(--muted);text-align:center;margin-top:18px;font-family:var(--head);letter-spacing:.02em}
+
+/* ---------- modal ---------- */
+dialog{border:0;padding:0;border-radius:12px;background:var(--box);color:var(--ink);width:min(900px,calc(100vw - 24px));max-height:calc(100vh - 32px);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(12,18,35,.55)}
+.mh{position:sticky;top:0;z-index:2;background:var(--navy);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.mh h3{margin:0;font-family:var(--head);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:17px;flex:1}
+.mh .x{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;font-family:var(--head)}
+.mb{padding:14px 16px 20px;overflow:auto}
+.mb h4{font-family:var(--head);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:14px;color:var(--navy-2);margin:18px 0 8px;border-bottom:1px solid var(--rule);padding-bottom:4px}
+.mb h4:first-child{margin-top:0}
+.rules{background:var(--paper);border-left:3px solid var(--navy-2);padding:8px 12px;border-radius:0 6px 6px 0;font-size:15.5px;margin:6px 0 10px}
+.rules ul{margin:4px 0;padding-left:20px}
+.rules p{margin:4px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px}
+.fld{display:flex;flex-direction:column;gap:3px}
+.fld>span{font-family:var(--head);font-size:12px;letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
+.fld input,.fld select,.fld textarea,.mb input[type=text],.mb input[type=number],.mb select,.mb textarea{border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:6px 8px;width:100%}
+.mb input[type=number]{width:74px}
+.mb textarea{min-height:90px;resize:vertical}
+.mb input[type=checkbox],.mb input[type=radio]{accent-color:var(--navy-2);width:16px;height:16px;vertical-align:-2px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--rule);border-radius:8px;margin-bottom:6px;background:var(--box)}
+.opt.sel{border-color:var(--navy-2);background:var(--hot)}
+.opt.no{opacity:.55}
+.opt .t{font-weight:600}
+.opt .d{font-size:15px;color:var(--muted)}
+.why{font-family:var(--head);font-size:11px;color:var(--err);letter-spacing:.03em}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.card{border:1px solid var(--rule);border-radius:8px;padding:8px 10px;cursor:pointer;background:var(--box);text-align:left}
+.card:hover{border-color:var(--hot-line)}
+.card.sel{border-color:var(--navy-2);background:var(--hot);box-shadow:inset 0 0 0 1px var(--navy-2)}
+.card .t{font-weight:600;font-size:17px}
+.card .d{font-size:14px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--head);font-size:12px;padding:3px 9px;border-radius:99px;background:var(--chip);border:1px solid transparent;cursor:default;white-space:nowrap}
+.chip.ok{border-color:var(--ok);color:var(--ok)}
+.chip.need{border-color:var(--err);color:var(--err)}
+button.chip{cursor:pointer}
+.tbl{width:100%;border-collapse:collapse;font-size:16px}
+.tbl th{font-family:var(--head);font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;border-bottom:1px solid var(--line);padding:4px 6px}
+.tbl td{border-bottom:1px solid var(--rule);padding:4px 6px;vertical-align:middle}
+.tbl td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl tr.picked td:first-child{font-weight:600}
+.tbl .desc{font-size:14px;color:var(--muted)}
+.msg{font-size:15px;padding:3px 0 3px 22px;position:relative}
+.msg::before{position:absolute;left:0;top:3px;font-family:var(--head);font-weight:700}
+.msg.ok::before{content:"✓";color:var(--ok)}
+.msg.warn::before{content:"!";color:var(--warn);left:5px}
+.msg.err::before{content:"✕";color:var(--err)}
+.msg.warn{color:var(--warn)} .msg.err{color:var(--err)}
+.stepper{display:inline-flex;align-items:center;gap:4px}
+.stepper button{width:30px;height:30px;border-radius:6px;border:1px solid var(--line);background:var(--paper);cursor:pointer;font-family:var(--head);font-size:16px}
+.stepper output{min-width:34px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums;font-size:19px}
+.charrow{display:grid;grid-template-columns:130px auto 1fr;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rule)}
+.charrow .nm{font-family:var(--head);font-weight:600}
+.charrow .mean{font-size:14.5px;color:var(--muted)}
+.big{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums}
+.dice{display:inline-flex;gap:6px;align-items:center}
+.die{width:34px;height:34px;border-radius:7px;border:1.5px solid var(--navy-2);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-family:var(--head)}
+.spellord{margin-bottom:10px}
+.spellord summary{font-family:var(--head);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;cursor:pointer;color:var(--navy-2);padding:6px 0}
+.row-flex{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.small{font-size:14px}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+@media (max-width:860px){
+  .c3,.c4,.c5,.c6,.c7,.c8{grid-column:span 12}
+  .adv-list,.weap,.spells,.contacts{grid-template-columns:1fr}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .charrow{grid-template-columns:1fr auto}
+  .charrow .mean{grid-column:1/-1}
+  .portrait{max-width:220px;margin:10px auto}
+}
+@media print{
+  body{background:#fff;font-size:12px}
+  .top,.foot{display:none}
+  .wrap{max-width:none;padding:0}
+  .page{display:grid!important;break-after:page}
+  .box{box-shadow:none}
+  .problems{display:none}
+  .band{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">Rivers of London<small>Investigator Sheet · click any section to fill it in</small></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-front" aria-selected="true" data-tab="front">Front</button>
+      <button class="tab" role="tab" id="tab-back" aria-selected="false" data-tab="back">Back</button>
+    </div>
+    <div class="tools">
+      <button class="btn" data-open="checklist" id="statusBtn">Checklist</button>
+      <button class="btn" data-open="develop" id="devBtn">Development</button>
+      <button class="btn" data-open="options">Rules options</button>
+      <button class="btn" data-open="roster">Characters</button>
+      <button class="btn" onclick="window.print()">Print</button>
+    </div>
+  </div>
+  <main>
+    <section class="page front on" id="page-front" role="tabpanel" aria-labelledby="tab-front"></section>
+    <section class="page back" id="page-back" role="tabpanel" aria-labelledby="tab-back"></section>
+  </main>
+  <p class="foot">Built from the Rivers of London RPG investigator sheet (© 2025 Chaosium Inc.; Rivers of London © 2011–2025 Ben Aaronovitch). Personal, non-commercial use. Page numbers refer to the core rulebook.</p>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <div class="mh"><h3 id="dlgTitle"></h3><button class="x" data-close>Done</button></div>
+  <div class="mb" id="dlgBody"></div>
+</dialog>
+<input type="file" id="fileIn" accept="image/*" class="sr">
+<input type="file" id="jsonIn" accept="application/json,.json" class="sr">
+
+<script>
+/* =====================================================================
+   RULES DATA (Rivers of London: the Roleplaying Game, Chaosium 2025)
+   ===================================================================== */
+
+const CHARS = ['STR','CON','DEX','INT','POW'];
+const CHAR_NAMES = {STR:'Strength',CON:'Constitution',DEX:'Dexterity',INT:'Intelligence',POW:'Power'};
+const CHAR_DESC = {
+  STR:'Muscle power: lifting, clinging on.',
+  CON:'Health, vigour and vitality: shrugging off wounds, poisons and disease.',
+  DEX:'Speed and manual manipulation. Highest DEX may act first in combat.',
+  INT:'Learning, memory, analysis and factual knowledge. Sets your own-language skill.',
+  POW:'Force of will and aptitude for magic. Magic points = POW ÷ 5.'
+};
+const CHAR_MEAN = {
+  STR:[[0,'enfeebled, bed-bound'],[10,'puny and frail'],[30,'weak'],[50,'average human strength'],[90,'one of the strongest people you’ve met'],[99,'world class; human maximum']],
+  CON:[[0,'dead'],[10,'weak health, prone to illness'],[30,'always the first to catch a cold'],[50,'average healthy human'],[90,'shrugs off colds; hardy and hale'],[99,'iron constitution; human maximum']],
+  DEX:[[0,'unable to perform physical tasks'],[10,'slow and uncoordinated'],[30,'clumsy; last picked for teams'],[50,'average human dexterity'],[90,'fast and nimble (acrobat, great dancer)'],[99,'world-class athlete; human maximum']],
+  INT:[[0,'unable to comprehend or communicate'],[10,'slow learner'],[30,'learning takes time; books aren’t your thing'],[50,'average human intellect'],[90,'quick-witted; multiple languages or theorems'],[99,'genius; human maximum']],
+  POW:[[0,'zombie-like, no will'],[10,'weak-willed, easily dominated'],[30,'credulous, easily swayed'],[50,'average human'],[90,'strong-willed; high magical potential'],[100,'iron will; strong link to the unseen']]
+};
+function meaning(c,v){let m='';for(const [t,s] of CHAR_MEAN[c]) if(v>=t) m=s; return m;}
+
+const COMMON = ['Athletics','Drive','Navigate','Observation','Read Person','Research','Sense Vestigia','Social','Stealth'];
+const COMBAT = ['Fighting','Firearms'];
+const SKILL_DESC = {
+  'Athletics':'Climbing, jumping, swimming, throwing (STR÷5 m). Breaks falls (half damage).',
+  'Drive':'Cars and light trucks; losing or tailing someone. Unusual vehicles at a penalty die unless occupational.',
+  'Navigate':'Finding your way, reading maps, cartography. The Knowledge gives a bonus die in your area.',
+  'Observation':'Mundane senses: spotting clues, hidden doors, ambushers, eavesdropping. Opposes Stealth.',
+  'Read Person':'Judging motives and intent, spotting lies. Opposes Social (deception) and Disguise.',
+  'Research':'Finding information in libraries, archives or online (non-verbal information gathering).',
+  'Sense Vestigia':'Detecting the imprint magic leaves on places and things. Free 60% with the Magic skill.',
+  'Social':'Persuasion, intimidation, seduction, flattery, deception. Opposed by Read Person or POW.',
+  'Stealth':'Moving quietly and hiding. Difficulty set by the opponent’s Observation.',
+  'Fighting':'Melee (hand-to-hand) combat and instinctive dodging. Consider a training style (boxing, martial art…).',
+  'Firearms':'All guns, plus bows and crossbows. Rare in the UK: give a reason for 60%.',
+  'Accounting':'Reading accounts, spotting siphoned funds, bribes and hidden finances.',
+  'Animal Handling':'Commanding and training animals (not riding animals — use Ride).',
+  'Appraise':'Estimating value, materials, age and workmanship; detecting forgeries.',
+  'Art/Craft':'One specialisation at 60% plus two others at 30%. Make, repair, identify or fake works.',
+  'Computer Use':'Programming, data analysis, hacking secure systems. Everyday computer use needs no roll.',
+  'Demolitions':'Setting and defusing explosives; placing charges for best effect.',
+  'Disguise':'Posing as someone else or concealing your identity. Opposed by Observation / Read Person.',
+  'Diving':'Scuba diving, equipment use and underwater navigation.',
+  'History':'Recalling facts about places, people and eras; identifying old techniques.',
+  'Languages':'One language at 60% plus two others at 30%. 30% = transactional, 50% = fluent, 70% = passes as native.',
+  'Law':'Laws, precedents and court procedure. For police, it “buys” the authority of the job.',
+  'Locksmith':'Picking and repairing locks, hot-wiring cars, bypassing ordinary alarms.',
+  'Magic':'Casting and sensing spells. Requires the Magical advantage. Also boosts Sense Vestigia to 60% free.',
+  'Mechanical Repair':'Fixing or building machines; simple household locks. Companion to Tech.',
+  'Medicine':'Diagnosis and treatment; can save a mortally wounded character within one hour.',
+  'Occult':'Folklore, occult traditions, paraphernalia, grimoires and codes.',
+  'Pilot Aircraft':'Flying aircraft; a roll is always needed to land.',
+  'Pilot Boat':'Handling boats and ships in difficult conditions.',
+  'Read Lips':'Following a conversation by sight alone (Observation can do this at a penalty die).',
+  'Ride':'Horses, donkeys and mules: riding, care and staying mounted.',
+  'Science':'One specialisation at 60% plus two others at 30%. Formal scientific training.',
+  'Sleight of Hand':'Pickpocketing, palming, concealing objects. Otherwise a Hard DEX roll.',
+  'Survival':'Shelter, water, food and hazards in harsh environments.',
+  'Tech':'Repairing or reconfiguring electronics: phones, computers, alarms, fuse boxes.',
+  'Track':'Following people, vehicles or animals over earth and vegetation.'
+};
+const EXPERT = ['Accounting','Animal Handling','Appraise','Art/Craft','Computer Use','Demolitions','Disguise','Diving','History','Languages','Law','Locksmith','Magic','Mechanical Repair','Medicine','Occult','Pilot Aircraft','Pilot Boat','Read Lips','Ride','Science','Sleight of Hand','Survival','Tech','Track'];
+const SPEC = {
+  'Art/Craft':['Acting','Architecture','Barbering','Calligraphy','Carpentry','Cooking','Dancing','Embroidery','Farming','Fine Art','Forgery','Literature','Morris Dancing','Musical Instrument','Opera Singing','Painting and Decorating','Photography','Pottery','Sculpting','Writing'],
+  'Science':['Anthropology','Archaeology','Astronomy','Biology','Botany','Chemistry','Cryptography','Engineering','Forensics','Geology','Mathematics','Meteorology','Pharmacy','Physics','Zoology'],
+  'Languages':['English','Latin','Ancient Greek','Arabic','Bengali','British Sign Language','Cantonese','Filipino','French','German','Gujarati','Hebrew','Hindi','Irish','Italian','Japanese','Krio','Mandarin','Persian','Polish','Portuguese','Punjabi','Russian','Scottish Gaelic','Spanish','Swahili','Turkish','Urdu','Welsh','Yoruba']
+};
+const SPECIALISED = ['Art/Craft','Science','Languages'];
+function skillKey(skill,spec){ if(skill==='Languages') return 'Language ('+(spec||'—')+')'; if(SPECIALISED.includes(skill)) return skill+' ('+(spec||'—')+')'; return skill; }
+function baseSkillOf(key){ if(key.startsWith('Language (')) return 'Languages'; const m=key.match(/^(Art\/Craft|Science) \(/); return m?m[1]:key; }
+
+/* Occupations: r = required, c = recommended; tokens {s:skill, sp:spec, any:'expert', hint} */
+const OCC = [
+ {id:'architect',n:'Architect',rivers:1,adult:1,d:'Designs and plans buildings; works with project managers and planning law.',r:[{s:'Art/Craft',sp:'Architecture'}],c:[{s:'Observation'},{s:'Research'}],k:'Local planning and city engineering departments, construction firms.',e:'Laptop, sketchbook, drawing pens and pencils; possibly drawing board, tracing paper, scale ruler.'},
+ {id:'artist',n:'Artist',rivers:1,d:'Painter, sculptor, textile artist and so on — driven by a vision, needing a thick skin.',r:[{s:'Art/Craft',hint:'choose a discipline'}],c:[{s:'History'},{s:'Languages'},{s:'Observation'},{s:'Read Person'},{s:'Research'}],k:'Art galleries, critics, wealthy patrons, the advertising industry.',e:'Sketchbook and pencils plus the tools of their discipline (e.g. sewing machine and fabrics; wheel, kiln, clay and glazes).'},
+ {id:'athlete',n:'Athlete',d:'Professional sportsperson in a team or individual sport; a degree of celebrity.',r:[{s:'Athletics'}],c:[{s:'Fighting'},{s:'Ride'},{s:'Stealth'}],k:'Sports personalities, sports writers, trainers, other media stars.',e:'Sports clothing, footwear and kit; access to training facilities.'},
+ {id:'author',n:'Author',d:'Writes novels, stories, poetry, plays, screenplays or comics; solitary work, odd hours.',r:[{s:'Art/Craft',sp:'Literature'},{s:'Research'}],c:[{s:'History'},{s:'Languages'},{s:'Observation'},{s:'Occult'},{s:'Read Person'},{s:'Social'}],k:'Agents, publishers, editors, bookshops, fans, specialist contacts (e.g. police for a crime author).',e:'Notebook, pens, pencils, laptop, books on their current research topic.'},
+ {id:'chancer',n:'Chancer',rivers:1,d:'Opportunist who drifts between short-term jobs and places; own code of ethics. Most likely Poor.',r:[{s:'Observation'},{s:'Stealth'}],c:[{s:'Athletics'},{s:'Fighting'},{s:'Navigate'},{s:'Read Person'},{s:'Sleight of Hand'}],k:'Casual employers (labour, delivery), criminals, police, the homeless, gang members.',e:'Perhaps only the clothes on their back, plus tools for their current job.',note:'Most likely has an affluence rating of Poor.'},
+ {id:'clergy',n:'Clergy, Member of the',d:'Priest, minister, imam or similar: officiates rites and gives pastoral care.',r:[{s:'Read Person'},{s:'Research'},{s:'Social'}],c:[{s:'Accounting'},{s:'History'},{s:'Languages'},{s:'Observation'},{s:'Occult'}],k:'Church hierarchy, local congregations, community leaders.',e:'Clerical vestments, holy book, religious paraphernalia (prayer beads, prayer mat…).'},
+ {id:'computer',n:'Computer Specialist',rivers:1,d:'Programmer, technician or hacker — or a bit of all three.',r:[{s:'Computer Use'},{s:'Tech'}],c:[{s:'Research'}],k:'Other IT workers, corporate workers and managers, specialised online communities.',e:'High-spec computer with multiple monitors; high-spec laptop or tablet.'},
+ {id:'criminal',n:'Criminal',rivers:1,d:'Street criminal, con artist, forger, smuggler, fence or enforcer. Discuss with the GM first (or play a reformed ex-criminal).',r:[],c:[{s:'Athletics'},{s:'Drive'},{s:'Fighting'},{s:'Firearms'},{s:'Locksmith'},{s:'Mechanical Repair'},{s:'Navigate'},{s:'Observation'},{s:'Read Person'},{s:'Social'},{s:'Stealth'}],k:'Fences, gang members, drug dealers and users, counterfeiters, money launderers, police, ex-cons.',e:'Depends on specialism: lockpicks, a concealed weapon, product hidden about their person…',note:'GM advice: discuss in Session Zero; may be taken as a former occupation.'},
+ {id:'dilettante',n:'Dilettante',rivers:1,d:'Lives off inheritance or investments; charming, eccentric, free to indulge passions.',r:[],c:[{s:'Art/Craft'},{s:'Drive'},{s:'Firearms'},{s:'Languages'},{s:'Ride'},{s:'Social'}],k:'People of similar background and taste, fraternal organisations, bohemian circles, high society.',e:'Pretty much anything they want.',needRich:1,note:'Requires the Rich advantage.'},
+ {id:'doctor',n:'Doctor of Medicine',rivers:1,adult:1,d:'GP, surgeon, specialist, pathologist or medical examiner — even cryptopathology.',r:[{s:'Medicine'}],c:[{s:'Observation'},{s:'Read Person'},{s:'Research'},{s:'Science',sp:'Biology'},{s:'Social'}],k:'Other physicians, medical workers, patients and ex-patients.',e:'High-vis jacket and a doctor’s bag: photo ID, prescription pad, gloves, dressings, diagnostic kit (stethoscope, BP monitor, thermometer, pulse oximeter), common drugs.'},
+ {id:'driver',n:'Driver',d:'Cabbie, chauffeur, courier, lorry or bus driver — or even a racing driver.',r:[{s:'Drive'}],c:[{s:'Navigate'},{s:'Observation'},{s:'Read Person'},{s:'Social'}],k:'Customers, businesses, law enforcement, street-level life.',e:'Vehicle and licence, mobile phone, satnav, A–Z / street maps, card reader or cash box.'},
+ {id:'entertainer',n:'Entertainer',rivers:1,d:'Actor, singer, dancer, comedian, DJ, musician or TV/radio personality.',r:[{s:'Art/Craft',hint:'Acting or a musical instrument'}],c:[{s:'Disguise'},{s:'Observation'},{s:'Read Person'}],k:'Theatre, film and TV industries, club owners, unions, critics, maybe organised crime.',e:'Equity (or SAG) card and stage make-up; instrument; decks and records or laptop.',note:'A famous film actor or celebrity must take the Rich advantage.'},
+ {id:'farmer',n:'Farmer',rivers:1,d:'Raises crops or livestock on their own or someone else’s land.',r:[{s:'Art/Craft',sp:'Farming'},{s:'Drive'}],c:[{s:'Accounting'},{s:'Athletics'},{s:'Mechanical Repair'},{s:'Observation'},{s:'Read Person'}],k:'Local bank, local politicians, local rural businesses.',e:'Farm vehicle, licensed shotgun, tools (hammer, axe…).'},
+ {id:'firefighter',n:'Firefighter',rivers:1,d:'Fights fires and performs rescues; works closely with police and ambulance.',r:[{s:'Athletics'}],c:[{s:'Drive'},{s:'Navigate'},{s:'Observation'}],k:'Police, ambulance drivers, paramedics.',e:'High-vis protective clothing, helmet, air supply, gloves, axe, first-aid kit, rope.'},
+ {id:'influencer',n:'Influencer',d:'Builds a social media following and uses it to endorse and sell.',r:[{s:'Social'}],c:[{s:'Computer Use'}],k:'Myriad followers, businesspeople, other influencers.',e:'Tablet, mobile phone, webcam, mic, ring light, selfie stick.'},
+ {id:'journalist',n:'Journalist',d:'Reporter or investigative journalist for print, broadcast or online news.',r:[{s:'Research'},{s:'Social'}],c:[{s:'Art/Craft',sp:'Photography'},{s:'History'},{s:'Observation'},{s:'Read Person'}],k:'News industry, politicians, street-level criminals, law enforcement.',e:'Press pass, notebook, mobile phone, possibly audio/video recording kit.'},
+ {id:'lawyer',n:'Lawyer',rivers:1,adult:1,d:'Solicitor, barrister, legal executive or attorney.',r:[{s:'Law'},{s:'Research'},{s:'Social'}],c:[{s:'Accounting'},{s:'Computer Use'},{s:'History'},{s:'Observation'},{s:'Read Person'}],k:'Criminal organisations, businesspeople, campaigners, government officials (depending on field).',e:'Mobile phone, smart suit, legal manuals, legal pads, briefcase.'},
+ {id:'lecturer',n:'Lecturer',d:'Educator of any kind: teacher, tutor, lecturer or professor.',r:[{s:'Research'},{any:'expert',hint:'a skill for their subject specialism'}],c:[{s:'Languages'},{s:'Read Person'},{s:'Social'}],k:'Fellow academics and teachers, universities, libraries.',e:'Course syllabus, lecture notes, mark schemes, coloured pens, access to the stationery cupboard.'},
+ {id:'librarian',n:'Librarian',rivers:1,d:'Keeper of books, records and databases — never mess with a librarian.',r:[{s:'Research'}],c:[{s:'Accounting'},{s:'Computer Use'}],k:'Booksellers, community groups, specialist researchers.',e:'Library card (ID), stationery, and books — lots and lots of books.'},
+ {id:'nurse',n:'Nurse',adult:1,d:'Trained healthcare professional in hospitals, care homes or general practice.',r:[{s:'Medicine',nurse:1}],c:[{s:'Observation'},{s:'Read Person'},{s:'Social'}],k:'Hospital workers, physicians, community workers.',e:'Nurse’s bag: syringes, dressings, saline, gloves, specimen bottles, diagnostic kit, over-the-counter drugs.',note:'Medicine at 60%, or Medicine 40% plus another expert skill at 40%.'},
+ {id:'paramedic',n:'Paramedic',rivers:1,adult:1,d:'Emergency care on the front line, often in hazardous settings.',r:[{s:'Medicine'},{s:'Observation'}],c:[{s:'Read Person'},{s:'Science',sp:'Biology'},{s:'Social'}],k:'Other paramedics, hospital (A&E) staff, police, firefighters.',e:'Paramedic’s bag: gloves, airways, tourniquets, dressings, bag valve mask, foil blanket, head torch, shears, diagnostic kit, emergency drugs.'},
+ {id:'parapsych',n:'Parapsychologist',d:'“Ghost hunter” who studies — and mostly debunks — the paranormal.',r:[{s:'Occult'},{s:'Read Person'}],c:[{s:'Art/Craft',sp:'Photography'},{s:'History'},{s:'Languages'},{s:'Science',sp:'Anthropology'},{s:'Sense Vestigia'}],k:'Universities, parapsychological publications.',e:'Notebook, pens, flashlight, EMF detector, dowsing rods, infrared thermal imager, recording equipment.'},
+ {id:'police',n:'Police Officer / Detective',rivers:1,adult:1,d:'Uniformed officer or plain-clothes detective. Bonus die on Social with law-abiding public when in uniform or showing a warrant card.',r:[{s:'Law'}],c:[{s:'Athletics'},{s:'Drive'},{s:'Fighting'},{s:'Firearms'},{s:'Navigate'},{s:'Observation'},{s:'Read Person'},{s:'Research'},{s:'Social'},{s:'Stealth'}],k:'Law enforcement, firefighters, community leaders, informers, reporters, the homeless, criminals (especially repeat offenders).',e:'Warrant card. On duty in uniform: stab vest, utility belt with handcuffs, Airwave radio, PAVA spray, baton and PPE pouch (gloves, CPR mask).',weapons:['PAVA Spray/Mace','Police Baton'],note:'Bonus die on Social with law-abiding members of the public when in uniform or showing a warrant card.'},
+ {id:'pi',n:'Private Investigator',d:'Freelance detective working for private clients; often ex-police.',r:[{s:'Law'},{s:'Research'}],c:[{s:'Art/Craft',sp:'Photography'},{s:'Computer Use'},{s:'Disguise'},{s:'Drive'},{s:'Locksmith'},{s:'Observation'},{s:'Read Person'},{s:'Social'},{s:'Stealth'}],k:'Law enforcement, clients.',e:'Notebook, pens, camera, covert surveillance equipment, PI licence, laptop, mobile phone.'},
+ {id:'service',n:'Service Member',rivers:1,d:'Army, navy or air force — usually recently left active service.',r:[{s:'Athletics'},{s:'Fighting'},{s:'Firearms'}],c:[{s:'Languages'},{s:'Mechanical Repair'},{s:'Navigate'},{s:'Observation'},{s:'Stealth'},{s:'Survival'}],anyRec:1,k:'Ex-service members (some now police), the intelligence community, “my mate who’s in…”, hometown friends.',e:'Depends on service and role; UK veterans are unlikely to have kept a firearm.',note:'Recommended skills also include any skill appropriate to their military career.'},
+ {id:'social',n:'Social Worker',rivers:1,d:'Safeguards vulnerable adults, children and families.',r:[{s:'Social'}],c:[{s:'Observation'},{s:'Research'}],k:'Families and individuals involved with social services, police, doctors.',e:'Photo ID card, mobile phone, case notes, notebook, pen.'},
+ {id:'agent',n:'Special Agent',rivers:1,d:'Government investigator: NCA, MI5, MI6, FBI and the like.',r:[{s:'Law'}],c:[{s:'Athletics'},{s:'Drive'},{s:'Fighting'},{s:'Firearms'},{s:'Navigate'},{s:'Observation'},{s:'Read Person'},{s:'Research'},{s:'Social'},{s:'Stealth'}],k:'Law enforcement, government organisations.',e:'Photo ID card; usually a registered firearm and access to body armour.'},
+ {id:'trades',n:'Tradesperson',rivers:1,d:'Builder, plumber, electrician, carpenter, decorator and so on.',r:[{s:'Art/Craft',alt:1,hint:'a trade specialism (or another expert skill if more fitting)'}],c:[{s:'Observation'}],k:'Other tradespeople, trade suppliers, customers.',e:'Tools of the trade (saws, planes, drills… or wrenches, drain rods, sealant…).'},
+ {id:'antiques',n:'Antiques Dealer (example custom)',d:'Sample custom occupation from Chapter 9: runs a shop or buys and sells on the road.',r:[{s:'Appraise'},{s:'Art/Craft'}],c:[{s:'History'},{s:'Languages'},{s:'Observation'},{s:'Research'},{s:'Social'}],k:'Booksellers, antique collectors, historians and historical societies, possibly criminal fences.',e:'Auction catalogues, jeweller’s loupe, notebook, business cards.'},
+ {id:'custom',n:'Custom occupation',d:'Build your own with the GM: 1–3 required skills, a list of recommended skills, contacts and equipment (p. 313).',r:[],c:[],k:'',e:'',custom:1}
+];
+const occById = id => OCC.find(o=>o.id===id);
+function tokLabel(t){ if(t.any) return 'Any expert skill ('+t.hint+')'; let s=t.s==='Languages'?'Languages':t.s; if(t.sp) s+=' ('+t.sp+')'; else if(SPECIALISED.includes(t.s)&&t.s!=='Languages') s+=' ('+(t.hint||'any')+')'; if(t.nurse) s+=' (60%, or 40% + another expert 40%)'; return s; }
+
+const ADV = [
+ {id:'connected',n:'Connected',pre:{},d:'Can pull strings with powerful people (official, rich individual, criminal organisation). Favours without a Social roll — but they will want favours back.',field:'Connected to'},
+ {id:'dmgbonus',n:'Damage Bonus',pre:{STR:60},d:'Melee attacks inflict +1 damage (not ranged, firearms or spells).'},
+ {id:'fast',n:'Fast Reactions',pre:{DEX:60},d:'Two “fight back” responses per round; enemies gain no benefit for outnumbering you.'},
+ {id:'magical',n:'Magical',major:1,pre:{INT:60,POW:60},d:'Aptitude to cast spells. Needed to take the Magic skill (which also gives Sense Vestigia 60% free). Counts as both choices.'},
+ {id:'tough',n:'Natural Toughness',pre:{STR:60,CON:60},d:'Unarmed and blunt melee attacks against you inflict 1 less damage (not blades, bullets or spells).'},
+ {id:'rich',n:'Rich',major:1,pre:{},d:'Rich affluence rating. Required for Dilettante (and famous celebrities). Counts as both choices.'},
+ {id:'scary',n:'Scary',pre:{},d:'Bonus die on Social rolls to intimidate.'},
+ {id:'sigfire',n:'Signature Firearm',pre:{DEX:60,skill:['Firearms',60]},d:'Bonus die on damage rolls with one specific firearm. A replacement takes a month to bond with.',field:'Firearm'},
+ {id:'sigweap',n:'Signature Weapon',pre:{DEX:60,skill:['Fighting',60]},d:'Bonus die on damage rolls with one specific melee weapon. A replacement takes a month to bond with.',field:'Weapon'},
+ {id:'silver',n:'Silver-Tongued',pre:{},d:'Bonus die on Social rolls to win someone over with eloquence and persuasion.'},
+ {id:'speedy',n:'Speedy',pre:{DEX:60},d:'MOV 9 instead of 8.'},
+ {id:'steadfast',n:'Steadfast',pre:{POW:60},d:'No impairment from stress, gunfire, gore or the supernatural (still from your own injuries or HTD).'},
+ {id:'knowledge',n:'The Knowledge',pre:{INT:60,skill:['Navigate',60]},d:'Nominate a city or area: bonus die on Navigate rolls there.',field:'City / area'},
+ {id:'wealthy',n:'Wealthy',pre:{},d:'Wealthy affluence rating.'}
+];
+const DIS = [
+ {id:'blunt',n:'Blunt',d:'Penalty die on all Social rolls.'},
+ {id:'crossed',n:'Crossed the Wrong People',d:'Powerful enemies the GM brings into play (and replaces if eliminated).'},
+ {id:'distracted',n:'Easily Distracted',d:'Penalty die on Observation and Read Person rolls.'},
+ {id:'damaged',n:'Damaged',not:['steadfast'],d:'Fumble on 95+ (90+ while impaired or in combat, recovering to 95).'},
+ {id:'disorganised',n:'Disorganised',d:'Penalty die on Luck rolls to find useful items.'},
+ {id:'fingers',n:'Fingers and Thumbs',d:'Penalty die on fine-manipulation DEX rolls and on firearm/ranged damage rolls.'},
+ {id:'frail',n:'Frail',not:['tough'],d:'No Hurt level: 1 damage = Bloodied; 2 damage = Bloodied and Down.'},
+ {id:'hothead',n:'Hot-Headed',d:'Cannot Flee in combat; involuntary actions are always violent.'},
+ {id:'iron',n:'Iron-Blooded',noFae:1,d:'Genii locorum, unicorns and High Fae detest you; penalty die on Social with anyone vulnerable to cold iron.'},
+ {id:'exhausting',n:'Magic is Exhausting',d:'Every spell’s base cost is +1 magic point.'},
+ {id:'nomagic',n:'Not a Magical Bone',not:['magical'],noFae:1,d:'Can never learn or use magic (still affected by it).'},
+ {id:'slow',n:'Slow-Footed',not:['speedy'],d:'MOV 5 (before any age adjustment).'},
+ {id:'slowheal',n:'Slow Healer',d:'Cannot spend Luck to avoid Down after-effects or when recovering from a Mortal Wound.'},
+ {id:'weak',n:'Weak',maxSTR:40,d:'STR 40 maximum; penalty die on STR rolls, including melee damage rolls.'}
+];
+const PKG = [
+ {id:'academic',n:'Academic',occ:'lecturer',d:'Years in academia, published papers and chapters.'},
+ {id:'criminal',n:'Criminal',occ:'criminal',d:'A life of crime and time served — now gone straight.'},
+ {id:'military',n:'Ex-Military',occ:'service',d:'Served in a full-scale conflict; carries the scars.'},
+ {id:'experienced',n:'Experienced Investigator',occ:null,any:1,d:'Any occupation. 60 points on any skills, or one extra new skill at 60%.'},
+ {id:'paranormal',n:'Paranormal',occ:'parapsych',soft:1,d:'Knows the demi-monde through books or contact (other occupations with GM consent).'},
+ {id:'police',n:'Police',occ:'police',d:'Years on the force, or recently retired.'},
+ {id:'spellcaster',n:'Spellcaster',occ:null,spell:1,d:'Requires Magical. Magic starts at 70%; three first-order spells (1 mastered) and two second-order spells (1 mastered).'}
+];
+
+/* Spells. pre = array of groups; each group is satisfied by any one of its names. A trailing * means “mastered”. */
+const SPELLS = [
+ {n:'Aqua',o:1,pre:[],d:'Conjures a ping-pong-ball sphere of water above your palm. Boost: more or bigger balls.'},
+ {n:'Flash Bulb',o:1,pre:[],d:'A blinding flash. Target makes a POW roll or is stunned and partly blinded for 1D10 rounds.'},
+ {n:'Impello',o:1,pre:[],d:'An invisible hand that pushes, pulls or levitates objects (heavy loads need a POW roll). Cannot lift yourself.'},
+ {n:'Noisemaker',o:1,pre:[['Werelight']],d:'A small expanding cloud of gas with a comic farting noise — a distraction.'},
+ {n:'Rock Drill',o:1,pre:[['Impello']],d:'Repeated impello blows break 7.5 cm of concrete or 30 cm of earth per round. Boost: sustain 1 MP/round.'},
+ {n:'Scindere',o:1,pre:[],d:'Holds an object up to ~10 kg fixed in place; moving it is STR vs your POW.'},
+ {n:'Snapdragon',o:1,pre:[],d:'A flash and a loud crack to startle or distract.'},
+ {n:'Terra',o:1,pre:[],d:'Conjures a golf-ball-sized rock or handful of earth. Boost: more.'},
+ {n:'Werelight',o:1,pre:[],d:'A golf-ball light as bright as a household bulb, no heat, 5 minutes. Apprentices start with it mastered.'},
+ {n:'Candano',o:2,pre:[],d:'“Tanglefoot”: a magical bolo around the legs. Magic attack; target DEX/STR roll or is entangled (may fall prone).'},
+ {n:'Car Killer',o:2,pre:[['Werelight'],['Impello']],d:'Fries microprocessors: disables a car or any chip-based device.'},
+ {n:'Fireball',o:2,pre:[['Impello'],['Werelight','Flash Bulb']],d:'The classic fireball. Magic attack, 1 weapon damage + damage roll (DEX). Boost: +1 damage.',atk:{dmg:1,skill:'Magic'}},
+ {n:'Impello Palma',o:2,pre:[['Impello']],d:'An invisible slap that swats objects or people. Magic attack, 1 damage total. Boost: an invisible barrier.',atk:{dmg:1,skill:'Magic'}},
+ {n:'Invisible Catch',o:2,pre:[['Impello']],d:'Catches objects or people in mid-air (penalty die if fast-moving).'},
+ {n:'Impello Vibrato',o:2,pre:[['Rock Drill']],d:'Vibrates inert matter — topples objects or collapses structures. Needs 3–5 rounds of concentration.'},
+ {n:'Light Bulb',o:2,pre:[['Scindere'],['Werelight']],d:'A werelight fixed in place like a light fitting, 5 minutes. Boost: size/brightness.'},
+ {n:'Wandering Light',o:2,pre:[['Impello'],['Werelight']],d:'A werelight that follows you in a fixed position, 5 minutes. 1 MP to sustain.'},
+ {n:'Serra Obscura',o:2,pre:[['Shield (Basic)']],d:'A 6 cm force blade from palm or finger for 1 minute. Uses Fighting, base damage 1.',atk:{dmg:1,skill:'Fighting'}},
+ {n:'Shield (Basic)',o:2,pre:[],d:'Air shield (aer congolare) that reduces each attack or bullet by 2 damage until it fails.'},
+ {n:'Waterbomb',o:2,pre:[['Aqua'],['Impello']],d:'A balloon-sized ball of water. Boost: propel it at a target or chill it.'},
+ {n:'Ball of Lightning',o:3,pre:[['Impello'],['Shield (Basic)']],d:'Self-propelled ball lightning. Magic attack, 2 weapon damage + damage roll (DEX).',atk:{dmg:2,skill:'Magic'}},
+ {n:'Bumblebee',o:3,pre:[['Wandering Light']],d:'A squealing orange light that flies about erratically — a hard-to-ignore distraction.'},
+ {n:'Glitter Bomb',o:3,pre:[['Waterbomb']],d:'An icy projectile that freezes a 2 m radius.'},
+ {n:'Grasping Hand',o:3,pre:[['Impello*']],d:'Superhuman impello: rip off a car door or roll a car.'},
+ {n:'Ice Blast',o:3,pre:[['Waterbomb']],d:'A 30 m cone of freezing ice particles.'},
+ {n:'Skinny Grenade',o:3,pre:[['Fireball'],['Scindere']],d:'A sticky, delayed fireball: 2 m blast after 1D10 rounds.'},
+ {n:'Throw Sound',o:3,pre:[['Shield (Basic)'],['Impello']],d:'Throw your voice. Boost: other sounds.'},
+ {n:'Aqua in Nebula Oborire',o:4,pre:[['Aqua*']],d:'Raises a mist from a body of water.'},
+ {n:'Coffin Bell, The',o:4,pre:[['Terra*'],['Impello*']],d:'Moves 2 cubic metres of earth — for digging yourself out.'},
+ {n:'Flying Ice Saw',o:4,pre:[['Glitter Bomb','Ice Blast']],d:'A 3 m spinning ice disc that can strike up to 3 targets.'},
+ {n:'Natchaduri',o:4,pre:[['Candano']],d:'“Dancing Rope”: a crimson smoke whip to 15 m that binds or strikes, for 2 rounds.'},
+ {n:'Telescopium',o:4,pre:[['Shield (Basic)*']],d:'Air lenses that act as a telescope.'},
+ {n:'Wall Banger, The',o:4,pre:[['Grasping Hand*']],d:'Unzips brickwork: tears open one face of a house.'},
+ {n:'Clausurafrange',o:5,pre:[['Impello*']],d:'Opens any mundane lock, neatly or by force.'},
+ {n:'Seducere',o:5,pre:[],d:'Bends a single target to your will, like the Glamour. POW roll to resist.'},
+ {n:'Sīphōnem',o:5,pre:[],d:'Carefully disarms a demon trap.'},
+ {n:'Vultus Occulto',o:5,pre:[['Shield (Basic)*']],d:'Makes your face impossible to make out for 10 minutes.'},
+ {n:'Heart Stop',o:6,pre:[['Impello*']],d:'Paralysis — or a stopped heart. Opposed POW vs CON.'},
+ {n:'Vox Imperante',o:6,pre:[['Seducere']],d:'A command of up to three words, obeyed instantly by all who hear it.'}
+];
+const spellByName = n => SPELLS.find(s=>s.n===n);
+
+const WEAPONS = [
+ {n:'Unarmed (fists, kicks)',sk:'Fighting',dm:0,rg:'Touch',melee:1},
+ {n:'Axe',sk:'Fighting',alt:'Athletics',dm:1,rg:'Touch',thrown:1,melee:1},
+ {n:'Brass Knuckles',sk:'Fighting',dm:1,rg:'Touch',melee:1},
+ {n:'Chainsaw',sk:'Fighting',dm:2,rg:'Touch',melee:1},
+ {n:'Cricket/Baseball Bat',sk:'Fighting',dm:1,rg:'Touch',melee:1},
+ {n:'Improvised (rock, scissors…)',sk:'Fighting',alt:'Athletics',dm:1,rg:'Touch',thrown:1,melee:1},
+ {n:'Knife',sk:'Fighting',alt:'Athletics',dm:1,rg:'Touch',thrown:1,melee:1},
+ {n:'PAVA Spray/Mace',sk:'Fighting',dm:'Special',rg:'Up to 3',note:'Target Hard CON roll or blinded and in pain 1D6 rounds (penalty die). No point-blank bonus.'},
+ {n:'Police Baton',sk:'Fighting',dm:1,rg:'Touch',melee:1},
+ {n:'Spear',sk:'Fighting',alt:'Athletics',dm:1,rg:'Touch',thrown:1,melee:1},
+ {n:'Bow',sk:'Firearms',dm:1,rg:'30'},
+ {n:'Crossbow',sk:'Firearms',dm:1,rg:'50'},
+ {n:'Regular Handgun (.38, 9mm)',sk:'Firearms',dm:1,rg:'15'},
+ {n:'Heavy Handgun (.45)',sk:'Firearms',dm:2,rg:'15'},
+ {n:'Rifle (.30-06, AK-47)',sk:'Firearms',dm:2,rg:'100',note:'AK-47 capable of automatic fire.'},
+ {n:'Shotgun (12-gauge)',sk:'Firearms',dm:2,rg:'50'},
+ {n:'Submachine Gun',sk:'Firearms',dm:2,rg:'15',note:'Automatic fire.'},
+ {n:'Machine Gun',sk:'Firearms',dm:2,rg:'100',note:'Automatic fire.'},
+ {n:'Stun Gun',sk:'Firearms',dm:'Special',rg:'Up to 3',note:'Target Hard CON roll or stunned 1D6 rounds (penalty die). No point-blank bonus.'}
+];
+
+const AFFLUENCE = [
+ {n:'Poor',d:'Bare minimum: a roof and at least one meagre meal a day.',acc:'Cheapest rental or fleabag hotel.',trav:'Cheapest public transport; any vehicle is cheap and unreliable.',maj:'No major purchases possible.'},
+ {n:'Average',d:'Reasonable comfort, three meals a day, occasional treats. The default.',acc:'Average home or apartment; moderately priced hotels.',trav:'Standard travel, not first class; likely a reliable car.',maj:'One major purchase a year.'},
+ {n:'Wealthy',d:'Luxury and comfort. Requires the Wealthy advantage.',acc:'Substantial residence, some domestic help, maybe a second home; expensive hotels.',trav:'First class; an expensive car.',maj:'One major purchase a month.'},
+ {n:'Rich',d:'Great luxury. Requires the Rich advantage.',acc:'Plush residence or estate, abundant staff, homes abroad; the world’s top hotels.',trav:'First class or private jet; chauffeur-driven luxury cars.',maj:'Few limits.'}
+];
+
+const AFFINITY = [
+ {n:'Air',d:'Bend the air to your will.',e:'Summon a draught strong enough to close a door.',s:'A gust that pushes a person back 2 m unless they make a STR roll.'},
+ {n:'Animals',d:'At one with the animal kingdom.',e:'Make any animal docile.',s:'Any animal follows a one-sentence instruction it could understand.'},
+ {n:'Earth',d:'Bend the earth to your will (Quiet People’s affinity).',e:'Dig a 1 m cube hole in compacted earth in minutes.',s:'A tremor that shakes anyone within 10 m (DEX roll or drop what they hold).'},
+ {n:'Fire',d:'Bend fire to your will.',e:'Ignite non-living material by touch, like a match.',s:'Ignite non-living material like a burning torch.'},
+ {n:'Mechanical',d:'Special aptitude with mechanisms (or specialise: clockwork, locks).',e:'Fix a mechanical watch — or open a Regular-difficulty lock.',s:'Fix any mechanical car fault in 10 minutes — or open a Hard lock.'},
+ {n:'Plants',d:'Make vegetation do interesting things.',e:'Make a bouquet’s worth of flowers bloom.',s:'Move branches to block or free a path; swell a door so it jams.'},
+ {n:'Water',d:'Influence and control water (not on a river’s scale).',e:'Breathe underwater for minutes; shape a little water.',s:'Breathe underwater for an hour; direct a jet from a hose or tap.'}
+];
+
+/* Table 10 (Signare) is not reproduced here — roll 1D100 and look the result up in the rulebook, p. 165. */
+const SIG_COLS = ['Sound','Smell','Other sensation'];
+
+/* Table 4: characteristic for a skill learned in play (use the higher if several). */
+const CHAR_FOR = {'Accounting':['INT'],'Animal Handling':['INT','POW'],'Appraise':['INT'],'Art/Craft':['DEX','INT','POW'],'Computer Use':['INT'],'Demolitions':['DEX','INT'],'Disguise':['DEX','POW'],'Diving':['CON','DEX'],'History':['INT'],'Languages':['INT'],'Law':['INT'],'Locksmith':['DEX'],'Mechanical Repair':['DEX','INT'],'Medicine':['INT'],'Occult':['INT'],'Pilot Aircraft':['INT'],'Pilot Boat':['DEX','INT'],'Read Lips':['INT'],'Ride':['DEX','STR'],'Science':['INT'],'Sleight of Hand':['DEX'],'Survival':['CON','INT'],'Tech':['DEX','INT'],'Track':['INT']};
+
+const BACKQ = {
+ child:[
+  {k:'cFamily',q:'What did “family” mean to your investigator as a child?',o:[['Large family','Siblings, cousins, aunts and uncles; regular gatherings. Better, or more complicated?'],['Nuclear family','One or two parents, one or two siblings. Most families have secrets — what’s yours?'],['Not much','Estranged, never knew them, or raised in care. What happened? Still in touch with anyone?']]},
+  {k:'cHome',q:'What did “home” mean to your investigator as a child?',o:[['Comfort','Hot meals, affection, peace; celebrations and holidays.'],['Uncertainty','Good sometimes, bad at others. Did one event change everything?'],['Bad memories','A cold, loveless place of raised voices and closed doors.']]},
+  {k:'cWhere',q:'Where did your investigator live as a child?',o:[['City','Crowds, traffic, anonymity — tower block, townhouse or leafy suburb?'],['Small town','Everyone knows everyone. Estate, Victorian terrace or detached house?'],['Rural','Isolation, school bus, country lanes. Farmhouse, cottage or estate?'],['It’s complicated','No one stable place — moving for work, boarding school, fleeing war or repression?']]}
+ ],
+ present:[
+  {k:'pFamily',q:'What does family mean to your investigator now?'},
+  {k:'pHome',q:'What does home mean to your investigator now?'},
+  {k:'pWhere',q:'Where do they live now — which area, what kind of place, who else lives there?'},
+  {k:'pCulture',q:'How does their cultural background, gender or sexuality affect their present?'}
+ ],
+ brush:[
+  {k:'b1',q:'What was their first brush with the supernatural? (a ghost, a fae, spontaneous magic, seeing a spell cast…)'},
+  {k:'b2',q:'How did it make them feel? Excited, frightened, intrigued?'},
+  {k:'b3',q:'Did it change the path of their life? How?'},
+  {k:'b4',q:'Did they seek out others who knew — an occult group, a church, an online community? How did they come to the Folly’s attention?'}
+ ]
+};
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+function blank(){
+  return {
+    v:1,
+    info:{name:'',occ:'',occName:'',occReq:'',occRec:'',pob:'',res:'',gender:'',age:'',notes:'',affluence:'Average',portrait:''},
+    opt:{kind:'human',free:false,wide:false,ageMov:false,affinity:'',affinityCustom:'',refresh:''},
+    ch:{STR:50,CON:50,DEX:50,INT:60,POW:70},
+    luck:{start:null,cur:null,dice:null},
+    mp:{cur:null},
+    adv:[], advField:{},
+    pkg:{id:'',mode:'points',pts:{}},
+    dis:'',
+    picks:[], extras:[], adj:{},
+    lang:{own:'English',second:'',mode:'none'},
+    nurse:{split:false,skill:'',spec:''},
+    magicType:'apprentice',
+    spells:[],
+    weapons:Array.from({length:6},()=>({n:'',sk:'Fighting',dm:'',rg:'',melee:false,sig:false,note:''})),
+    dmg:{hurt:false,bloodied:false,down:false,impaired:false},
+    contacts:Array.from({length:8},()=>({n:'',r:'',secure:false,sour:false})),
+    sig:{p:[null,null,null],el:['','',''],keep:[true,true,false],third:'',text:''},
+    back:{cFamily:'',cHome:'',cWhere:'',culture:'',pFamily:'',pHome:'',pWhere:'',pCulture:'',brush:'unsure',b1:'',b2:'',b3:'',b4:'',text:''},
+    equip:'', cases:'',
+    customSkills:[],
+    dev:{pts:0,log:[],phase:null,phases:0,advBought:[],seq:0}
+  };
+}
+const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
+function merge(base,src){ // deep merge: keeps new default fields AND every key from the save (incl. maps like adj, pkg.pts, advField)
+  if(!isObj(src)) return base;
+  for(const k of Object.keys(src)){
+    const s=src[k]; if(s===undefined) continue;
+    base[k]=(isObj(base[k])&&isObj(s))?merge(base[k],s):s;
+  }
+  return base;
+}
+// Saves made before the merge fix lost skill improvements; rebuild them from the development history.
+function repairFromLog(C){
+  const sum={};
+  for(const l of (C.dev&&C.dev.log)||[]){ const u=l.u||{}; if((u.t==='raise'||u.t==='new')&&u.k) sum[u.k]=(sum[u.k]||0)+(+u.amt||0); }
+  let fixed=[];
+  for(const [k,v] of Object.entries(sum)){ if((+C.adj[k]||0)<v){ C.adj[k]=v; fixed.push(k); } }
+  return fixed;
+}
+const LS='rlcb.roster.v1';
+let roster={cur:null,chars:{}};
+let S=blank();
+function uid(){return Math.random().toString(36).slice(2,10)}
+function loadRoster(){
+  try{ const r=JSON.parse(localStorage.getItem(LS)||'null'); if(r&&r.chars) roster=r; }catch(e){}
+  if(!roster.cur||!roster.chars[roster.cur]){ const id=uid(); roster.cur=id; roster.chars[id]=blank(); }
+  for(const id of Object.keys(roster.chars)){ const c=merge(blank(),roster.chars[id]); repairFromLog(c); roster.chars[id]=c; }
+  S=roster.chars[roster.cur];
+}
+let saveT=null;
+function save(){ roster.chars[roster.cur]=S; clearTimeout(saveT); saveT=setTimeout(()=>{ try{localStorage.setItem(LS,JSON.stringify(roster));}catch(e){} },150); }
+
+/* =====================================================================
+   DERIVED VALUES
+   ===================================================================== */
+const isFae = () => S.opt.kind!=='human';
+const hasAdv = id => S.adv.includes(id);
+const occ = () => occById(S.info.occ);
+function occReqRec(){
+  const o=occ(); if(!o) return {r:[],c:[]};
+  if(o.custom){
+    const parse=str=>str.split(',').map(x=>x.trim()).filter(Boolean).map(x=>{const m=x.match(/^(.*?)\s*\((.*)\)$/); if(m){const s=m[1].trim().replace(/^Language$/,'Languages'); return {s, sp:SPECIALISED.includes(s)?m[2].trim():null};} return {s:x.replace(/^Language$/,'Languages')};});
+    return {r:parse(S.info.occReq||''),c:parse(S.info.occRec||'')};
+  }
+  return {r:o.r,c:o.c};
+}
+function occName(){ const o=occ(); if(!o) return ''; return o.custom?(S.info.occName||'Custom occupation'):o.n; }
+function pickLimit(){ return (S.pkg.id==='experienced'&&S.pkg.mode==='newskill')?7:6; }
+const hasMagicPick = () => S.picks.some(p=>p.skill==='Magic');
+
+function computeSkills(){
+  const M=new Map();
+  const put=(key,cat,base,skill,src)=>{ const cur=M.get(key); if(cur){ if(base>cur.base){cur.base=base;} cur.src.push(src); } else M.set(key,{key,cat,base,skill,src:[src]}); };
+  COMMON.forEach(k=>put(k,'common',30,k,'base'));
+  COMBAT.forEach(k=>put(k,'combat',30,k,'base'));
+  const INT=S.ch.INT;
+  // own languages
+  if(S.lang.own) put(skillKey('Languages',S.lang.own),'expert',Math.max(INT,60),'Languages','own');
+  if(S.lang.mode!=='none'&&S.lang.second) put(skillKey('Languages',S.lang.second),'expert',S.lang.mode==='equal'?Math.max(INT,60):Math.max(Math.floor(INT/2),30),'Languages','bilingual');
+  for(const p of S.picks){
+    if(COMMON.includes(p.skill)||COMBAT.includes(p.skill)){ put(p.skill,COMMON.includes(p.skill)?'common':'combat',60,p.skill,'pick'); continue; }
+    if(p.skill==='Magic'){ put('Magic','expert',S.pkg.id==='spellcaster'?70:60,'Magic','pick'); put('Sense Vestigia','common',60,'Sense Vestigia','magic'); continue; }
+    if(p.skill==='Medicine'&&S.info.occ==='nurse'&&S.nurse.split){ put('Medicine','expert',40,'Medicine','pick'); if(S.nurse.skill) put(skillKey(S.nurse.skill,S.nurse.spec),'expert',40,S.nurse.skill,'pick'); continue; }
+    if(SPECIALISED.includes(p.skill)){ const sp=p.specs||['','','']; put(skillKey(p.skill,sp[0]),'expert',60,p.skill,'pick'); [1,2].forEach(i=>{ if(sp[i]) put(skillKey(p.skill,sp[i]),'expert',30,p.skill,'pick30'); }); continue; }
+    put(p.skill,'expert',60,p.skill,'pick');
+  }
+  if(isFae()) put('Sense Vestigia','common',60,'Sense Vestigia','fae');
+  for(const x of S.extras){ put(skillKey(x.skill,x.spec),'expert',0,x.skill,'extra'); }
+  const out=[];
+  for(const e of M.values()){
+    e.pkg=S.pkg.id&&S.pkg.mode==='points'?(+S.pkg.pts[e.key]||0):0;
+    e.adjv=+S.adj[e.key]||0;
+    e.total=Math.max(0,e.base+e.pkg+e.adjv);
+    e.half=Math.floor(e.total/2);
+    e.picked=e.src.some(s=>s==='pick'||s==='pick30'||s==='magic');
+    out.push(e);
+  }
+  return out;
+}
+function skillVal(key){ const e=computeSkills().find(x=>x.key===key); return e?e.total:(COMMON.includes(key)||COMBAT.includes(key)?30:0); }
+function pkgEligible(key){
+  if(!S.pkg.id) return false;
+  const P=PKG.find(p=>p.id===S.pkg.id); if(P.any) return true;
+  const o=occ(); if(o&&o.anyRec) return true;
+  const {r,c}=occReqRec(); const base=baseSkillOf(key);
+  if([...r,...c].some(t=>t.s===base)) return true;
+  if(r.some(t=>t.any)&&!COMMON.includes(key)&&!COMBAT.includes(key)) return S.picks.some(p=>skillKey(p.skill,(p.specs||[])[0])===key||p.skill===key);
+  return false;
+}
+function charTotal(){ return CHARS.reduce((a,c)=>a+(+S.ch[c]||0),0); }
+function half(v){ return Math.floor((+v||0)/2); }
+function mov(){
+  let m=8; const parts=['Base 8'];
+  if(hasAdv('speedy')){ m=9; parts.push('Speedy → 9'); }
+  if(S.dis==='slow'){ m=5; parts.push('Slow-Footed → 5'); }
+  if(S.opt.ageMov){ const a=+S.info.age||0; const d=a>=80?5:a>=70?4:a>=60?3:a>=50?2:a>=40?1:0; if(d){ m-=d; parts.push('Age '+a+' → −'+d); } }
+  return {v:Math.max(1,m),why:parts.join(', ')};
+}
+function masteredCount(){ return S.spells.filter(s=>s.m).length; }
+function mpStart(){ if(isFae()) return null; return Math.floor((+S.ch.POW||0)/5)+masteredCount(); }
+function luckStart(){ return isFae()?(+S.ch.POW||0):S.luck.start; }
+function spellCost(sp){ return sp.o+(S.dis==='exhausting'?1:0); }
+function prereqOK(sp,known){ // known: map name->mastered
+  return sp.pre.every(g=>g.some(req=>{ const m=req.endsWith('*'); const n=m?req.slice(0,-1):req; return n in known && (!m||known[n]); }));
+}
+/* ---------- development (p. 120) ---------- */
+const inPlay = () => S.dev.log.length>0;
+function devTotals(){ let earned=0, spent=0; for(const l of S.dev.log){ const t=l.u&&l.u.t; if(t==='award') earned+=l.dp; else if(l.dp<0) spent-=l.dp; } return {earned,spent}; }
+const half2 = n => String(n).replace('.5','½').replace(/(^|-)0½/,'$1½');
+function devStep(v){ if(v<80) return {to:Math.min(80,v+10)}; if(v<90) return {to:Math.min(90,v+5)}; if(v<99) return {to:v+1}; return null; }
+const customSkill = n => S.customSkills.find(c=>c.n===n);
+const allExpert = () => [...EXPERT, ...S.customSkills.map(c=>c.n)];
+const skillDesc = n => SKILL_DESC[n] || (customSkill(n)?.d ? customSkill(n).d+' (custom)' : customSkill(n) ? 'Custom skill.' : '');
+function newSkillStart(skill){ const cs=CHAR_FOR[skill]||(customSkill(skill)?[customSkill(skill).c]:['INT']); const c=cs.reduce((a,b)=>(+S.ch[b]>+S.ch[a]?b:a)); return {v:Math.floor((+S.ch[c]||0)/2),c}; }
+function spellCounts(extra){ const n=[0,0,0,0,0,0,0], m=[0,0,0,0,0,0,0]; S.spells.forEach(s=>{ const d=spellByName(s.n); if(!d) return; n[d.o]++; if(s.m) m[d.o]++; }); if(extra) n[extra.o]++; return {n,m}; }
+function canLearn(sp){
+  if(!hasMagicPick()) return 'needs the Magic skill';
+  if(S.spells.some(s=>s.n===sp.n)) return 'already known';
+  const known={}; S.spells.forEach(s=>known[s.n]=!!s.m);
+  if(!prereqOK(sp,known)) return 'needs '+preText(sp);
+  const {n}=spellCounts();
+  if(sp.o>1&&n[sp.o-1]<2) return 'must know two order-'+(sp.o-1)+' spells first';
+  const after=spellCounts(sp).n; for(let k=2;k<=6;k++) if(after[k]>after[k-1]) return 'would be top-heavy (more order-'+k+' than order-'+(k-1)+' spells)';
+  return '';
+}
+function canMaster(s){
+  const d=spellByName(s.n); if(s.m) return 'already mastered';
+  if(d.o>1&&spellCounts().m[d.o-1]<2) return 'master two order-'+(d.o-1)+' spells first';
+  return '';
+}
+function preText(sp){ if(!sp.pre.length) return 'none'; return sp.pre.map(g=>g.map(r=>r.endsWith('*')?r.slice(0,-1)+' (mastered)':r).join(' or ')).join(' + '); }
+
+/* =====================================================================
+   VALIDATION
+   ===================================================================== */
+function tokenSatisfied(t){
+  if(t.any) return S.picks.some(p=>!COMMON.includes(p.skill)&&!COMBAT.includes(p.skill));
+  if(t.nurse) return S.picks.some(p=>p.skill==='Medicine');
+  if(t.alt) return S.picks.some(p=>p.skill===t.s) || S.picks.some(p=>!COMMON.includes(p.skill)&&!COMBAT.includes(p.skill)&&p.skill!=='Magic');
+  return S.picks.some(p=>p.skill===t.s && (!t.sp || ((p.specs||[])[0]||'').toLowerCase()===t.sp.toLowerCase()));
+}
+function advCheck(a){
+  const why=[];
+  for(const c of CHARS) if(a.pre[c] && (+S.ch[c]||0)<a.pre[c]) why.push(c+' '+a.pre[c]+'+');
+  if(a.pre.skill && skillVal(a.pre.skill[0])<a.pre.skill[1]) why.push(a.pre.skill[0]+' '+a.pre.skill[1]+'%+');
+  if(a.id==='magical'&&isFae()) why.push('fae cannot use Newtonian magic');
+  if(a.id==='magical'&&S.dis==='nomagic') why.push('conflicts with Not a Magical Bone');
+  if(a.id==='steadfast'&&S.dis==='damaged') why.push('conflicts with Damaged');
+  if(a.id==='tough'&&S.dis==='frail') why.push('conflicts with Frail');
+  if(a.id==='speedy'&&S.dis==='slow') why.push('conflicts with Slow-Footed');
+  return why;
+}
+function disCheck(d){
+  const why=[];
+  if(d.not) d.not.forEach(id=>{ if(hasAdv(id)) why.push('not with '+ADV.find(a=>a.id===id).n); });
+  if(d.noFae&&isFae()) why.push('not for fae investigators');
+  if(d.maxSTR&&(+S.ch.STR||0)>d.maxSTR) why.push('STR must be '+d.maxSTR+' or less');
+  return why;
+}
+function advSlots(){ return S.adv.filter(id=>!S.dev.advBought.includes(id)).reduce((a,id)=>a+(ADV.find(x=>x.id===id).major?2:1),0); }
+
+function validate(){
+  const R={}; const add=(step,lvl,msg)=>{(R[step]=R[step]||[]).push({lvl,msg});};
+  const o=occ();
+  // 1 occupation
+  if(!o) add('occ','err','Choose an occupation.');
+  else{
+    add('occ','ok',occName());
+    if(o.needRich&&!hasAdv('rich')) add('occ','err','Dilettante requires the Rich advantage.');
+    if(o.adult&&S.info.age&&+S.info.age<18) add('occ','warn',o.n+' cannot normally be chosen by an investigator under 18.');
+  }
+  if(!S.info.name) add('occ','warn','Give your investigator a name.');
+  if(!S.info.age) add('occ','warn','Choose an age.');
+  // 2 characteristics
+  const lo=S.opt.wide?20:30, hi=S.opt.wide?90:80;
+  const tot=charTotal();
+  if(tot!==280) add('chars','err','Characteristics total '+tot+' — must be exactly 280.');
+  else add('chars','ok','280 points assigned.');
+  CHARS.forEach(c=>{ const v=+S.ch[c]; if(v<lo||v>hi) add('chars','err',c+' must be between '+lo+' and '+hi+'.'); if(!S.opt.free&&v%10) add('chars','err',c+' must be a multiple of 10 (or enable free allocation).'); });
+  if(isFae()) add('chars','ok','Fae Luck = POW ('+S.ch.POW+'), refreshes daily'+(S.opt.refresh?' at '+S.opt.refresh:'')+'.');
+  else if(S.luck.start==null) add('chars','err','Roll Luck (2D10 + 50).'); else add('chars','ok','Luck '+S.luck.start+'.');
+  if(isFae()&&!S.opt.refresh) add('chars','warn','Set the daily time your fae Luck refreshes.');
+  // 3 advantages
+  const slots=advSlots();
+  if(slots>2) add('adv','err','Too many advantages: '+slots+' of 2 choices used (major advantages count as two).');
+  else if(slots<2) add('adv','warn','You may choose '+(2-slots)+' more advantage choice'+(2-slots>1?'s':'')+'.');
+  else add('adv','ok','Two advantage choices used.');
+  S.adv.forEach(id=>{ const a=ADV.find(x=>x.id===id); const w=advCheck(a); if(w.length) add('adv','err',a.n+' needs '+w.join(', ')+'.'); if(a.field&&!S.advField[id]) add('adv','warn',a.n+': specify '+a.field.toLowerCase()+(id==='connected'?' (can be decided later in play)':'')+'.'); });
+  if(S.pkg.id){
+    const P=PKG.find(p=>p.id===S.pkg.id);
+    if(!S.dis) add('adv','err','The '+P.n+' package requires one disadvantage.');
+    if(P.occ&&S.info.occ!==P.occ){ add('adv',P.soft?'warn':'err','The '+P.n+' package uses the '+occById(P.occ).n+' occupation'+(P.soft?' (others with GM consent).':'.')); }
+    if(P.spell&&!hasAdv('magical')) add('adv','err','The Spellcaster package requires the Magical advantage.');
+  }
+  if(S.dis){ const d=DIS.find(x=>x.id===S.dis); const w=disCheck(d); if(w.length) add('adv','err',d.n+': '+w.join(', ')+'.'); if(!S.pkg.id) add('adv','warn','Disadvantages are normally only taken with an experience package.'); }
+  // affluence
+  const af=S.info.affluence;
+  if(af==='Wealthy'&&!hasAdv('wealthy')) add('back','err','Wealthy affluence requires the Wealthy advantage.');
+  if(af==='Rich'&&!hasAdv('rich')) add('back','err','Rich affluence requires the Rich advantage.');
+  if(hasAdv('rich')&&af!=='Rich') add('back','warn','You took Rich — set affluence to Rich.');
+  if(hasAdv('wealthy')&&af!=='Wealthy') add('back','warn','You took Wealthy — set affluence to Wealthy.');
+  if(af!=='Average'&&af!=='Wealthy'&&af!=='Rich') add('back','warn','Non-average affluence should be agreed with the GM.');
+  // 4 skills
+  const lim=pickLimit();
+  if(inPlay()) add('skills','ok','In play: '+S.dev.pts+' development point'+(S.dev.pts===1?'':'s')+' banked.');
+  if(S.picks.length!==lim) add('skills',S.picks.length>lim?'err':'warn',S.picks.length+' of '+lim+' starting skills chosen.');
+  else add('skills','ok',lim+' starting skills chosen.');
+  if(o){ const {r}=occReqRec(); r.forEach(t=>{ if(!tokenSatisfied(t)) add('skills','err','Required skill missing: '+tokLabel(t)+'.'); }); }
+  if(hasMagicPick()&&!hasAdv('magical')) add('skills','err','The Magic skill requires the Magical advantage.');
+  if(hasAdv('magical')&&!hasMagicPick()&&!isFae()) add('skills','warn','You took Magical — you should choose Magic as a starting skill.');
+  S.picks.forEach(p=>{ if(SPECIALISED.includes(p.skill)&&!(S.info.occ==='nurse'&&p.skill==='Medicine')){ const sp=p.specs||[]; if(!sp[0]) add('skills','err',p.skill+': choose the 60% specialisation.'); else if(!sp[1]||!sp[2]) add('skills','warn',p.skill+': choose two more specialisations at 30%.'); } });
+  if(S.info.occ==='nurse'&&S.nurse.split&&!S.nurse.skill) add('skills','err','Nurse: choose the second expert skill at 40%.');
+  if(!S.lang.own) add('skills','warn','Enter your own (mother-tongue) language.');
+  if(S.pkg.id&&S.pkg.mode==='points'){
+    const sk=computeSkills(); const spent=sk.reduce((a,e)=>a+e.pkg,0);
+    if(spent!==60) add('skills',spent>60?'err':'warn','Experience package: '+spent+' of 60 points spent.');
+    else add('skills','ok','Experience package: 60 points spent.');
+    sk.forEach(e=>{ if(e.pkg>0&&e.base+e.pkg>80) add('skills','err',e.key+' raised above 80% by the package.'); if(e.pkg>0&&!pkgEligible(e.key)) add('skills','err',e.key+' is not a required/recommended skill for your occupation.'); });
+  }
+  // 5 magic
+  if(hasMagicPick()&&inPlay()){
+    const known={}; S.spells.forEach(s=>known[s.n]=!!s.m);
+    S.spells.forEach(s=>{ const d=spellByName(s.n); if(d&&!prereqOK(d,known)) add('magic','err',s.n+' needs '+preText(d)+'.'); });
+    if(!R.magic) add('magic','ok',S.spells.length+' spells known ('+masteredCount()+' mastered).');
+    if(!sigText()) add('magic','warn','Create your signare.');
+  } else if(hasMagicPick()){
+    const known={}; S.spells.forEach(s=>known[s.n]=!!s.m);
+    const by=o=>S.spells.filter(s=>spellByName(s.n)?.o===o);
+    const f=by(1), sc=by(2);
+    const sp=S.pkg.id==='spellcaster';
+    const need1=sp?3:2, need2=sp?2:1;
+    if(f.length!==need1) add('magic',f.length>need1?'err':'warn','First-order spells: '+f.length+' of '+need1+'.');
+    if(sc.length!==need2) add('magic',sc.length>need2?'err':'warn','Second-order spells: '+sc.length+' of '+need2+'.');
+    if(S.spells.some(s=>spellByName(s.n)?.o>2)) add('magic','err','Starting investigators can only know first- and second-order spells.');
+    const m1=f.filter(s=>s.m).length, m2=sc.filter(s=>s.m).length;
+    if(m1!==1) add('magic','err','Exactly one first-order spell should be mastered (you have '+m1+').');
+    if(m2!==(sp?1:0)) add('magic','err',sp?'Exactly one second-order spell should be mastered.':'Your second-order spell starts unmastered.');
+    if(S.magicType==='apprentice'){ const w=S.spells.find(s=>s.n==='Werelight'); if(!w) add('magic','err','Newtonian apprentices start with Werelight.'); else if(!w.m) add('magic','err','Apprentices start with Werelight mastered.'); }
+    S.spells.forEach(s=>{ const d=spellByName(s.n); if(d&&!prereqOK(d,known)) add('magic','err',s.n+' needs '+preText(d)+'.'); });
+    if(f.length===need1&&sc.length===need2&&!R.magic) add('magic','ok','Starting spells complete.');
+    const sg=sigText(); if(!sg) add('magic','warn','Create your signare.');
+  } else if(S.spells.length) add('magic','warn','You have spells listed but no Magic skill.');
+  if(isFae()&&!(S.opt.affinity||S.opt.affinityCustom)) add('magic','warn','Choose a demi-monde affinity.');
+  // backstory
+  if(!S.contacts.some(c=>c.n)) add('back','warn','Name at least one friend or family member in Contacts.');
+  if(!S.back.cFamily&&!S.back.text) add('back','warn','Backstory not started (optional — you can reveal it in play).');
+  // equipment
+  if(!S.equip) add('equip','warn','List your occupational equipment.');
+  return R;
+}
+const STEPS=[['occ','1 · Occupation & details','info'],['chars','2 · Characteristics & Luck','chars'],['adv','3 · Advantages (& package)','adv'],['skills','4 · Skills','skills'],['magic','Magic & signare','spells'],['back','5 · Backstory, affluence & contacts','backstory'],['equip','6 · Equipment','equip']];
+function worst(list){ if(!list) return 'ok'; return list.some(m=>m.lvl==='err')?'err':list.some(m=>m.lvl==='warn')?'warn':'ok'; }
+
+/* =====================================================================
+   RENDER — SHEET
+   ===================================================================== */
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ph=t=>'<span class="ph">'+esc(t)+'</span>';
+const fh=(f,h,lab='Full·Half')=>`<span><span class="fh"><b>${f??''}</b><span class="sl">/</span><i>${h??''}</i></span><span class="sub">${lab}</span></span>`;
+function dot(step,V){ const w=worst(V[step]); return w==='ok'?'':`<span class="problems ${w}" title="See checklist"></span>`; }
+function sigText(){
+  if(S.sig.text) return S.sig.text;
+  const parts=[]; [0,1,2].forEach(c=>{ if(!S.sig.keep[c]) return; const e=(S.sig.el[c]||'').trim(); if(e) parts.push(e); else if(S.sig.p[c]) parts.push(SIG_COLS[c]+' #'+S.sig.p[c]+' (look up in Table 10, p. 165)'); });
+  if(S.sig.third) parts.push(S.sig.third);
+  return parts.join('; ');
+}
+
+function renderSheet(){
+  const V=validate(); const sk=computeSkills(); const m=mov(); const L=luckStart(); const mp=mpStart();
+  const o=occ();
+  const val=(v,p)=>v?esc(v):ph(p||'');
+  const expertRows=sk.filter(e=>e.cat==='expert').sort((a,b)=>(b.src.includes('own')-a.src.includes('own'))||a.key.localeCompare(b.key));
+  const nExp=Math.max(9,expertRows.length);
+  const advNames=S.adv.map(id=>{const a=ADV.find(x=>x.id===id); let t=a.n; if(S.advField[id]) t+=' — '+S.advField[id]; return {t,major:a.major};});
+  const advRows=[...advNames.map(a=>`<div class="fl"><span class="v">${esc(a.t)}${a.major?'<span class="tag">major</span>':''}</span></div>`)];
+  if(S.pkg.id) advRows.push(`<div class="fl"><span class="v">${esc(PKG.find(p=>p.id===S.pkg.id).n)} experience package<span class="tag">package</span></span></div>`);
+  if(S.dis) advRows.push(`<div class="fl"><span class="v">${esc(DIS.find(d=>d.id===S.dis).n)}<span class="tag dis">disadvantage</span></span></div>`);
+  if(isFae()){ const af=S.opt.affinityCustom||S.opt.affinity; advRows.push(`<div class="fl"><span class="v">${S.opt.kind==='quiet'?'Quiet Person':'Lower fae'}${af?' — '+esc(af)+' affinity':''}<span class="tag">demi-monde</span></span></div>`); }
+  while(advRows.length<6) advRows.push('<div class="fl"><span class="v"></span></div>');
+
+  const wRows=S.weapons.map((w,i)=>{
+    const d=weaponDisplay(w);
+    return `<div class="wrow hot" data-open="weapon" data-i="${i}" tabindex="0"><span class="nm" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.n?esc(w.n)+(w.sig?' ★':''):ph('Add weapon')}</span>${fh(d.f,d.h)}<span class="col">${esc(d.dmg)}<span class="sub">Damage</span></span><span class="col">${esc(d.rg)}<span class="sub">Range</span></span></div>`;
+  });
+  const spellSlot=i=>{ const s=S.spells[i]; const d=s&&spellByName(s.n); return `<div class="srow hot" data-open="spells" tabindex="0"><span class="box2">${s&&s.m?'✓':''}</span><span class="ord">${d?d.o:''}<span class="sub">Order</span></span><span class="snm">${s?esc(s.n):''}<span class="sub">Name</span></span></div>`; };
+  const frontSpellN=6, totalSpellSlots=Math.max(9,S.spells.length);
+
+  document.getElementById('page-front').innerHTML=`
+  <div class="c3 stack">
+    <div class="box hot" data-open="info" data-focus="portrait" tabindex="0" style="padding-bottom:2px">
+      <div class="logo"><div class="l1">RIVERS</div><div class="l2">OF LONDON</div></div>
+      <div class="portrait">${S.info.portrait?`<img alt="Portrait" src="${S.info.portrait}">`:'Portrait<br>click to add'}</div>
+    </div>
+  </div>
+  <div class="c5 box">
+    ${dot('occ',V)}
+    <h2 class="band">Investigator Info <span class="ico">△</span><span class="hint">click to edit</span></h2>
+    <div class="bd">
+      <div class="fl hot" data-open="info" data-focus="name" tabindex="0"><label>Name</label><span class="v">${val(S.info.name)}</span></div>
+      <div class="fl hot" data-open="occupation" tabindex="0"><label>Occupation</label><span class="v">${o?esc(occName()):ph('Choose occupation…')}</span></div>
+      <div class="fl hot" data-open="info" data-focus="pob" tabindex="0"><label>Place of Birth</label><span class="v">${val(S.info.pob)}</span></div>
+      <div class="fl hot" data-open="info" data-focus="res" tabindex="0"><label>Residence</label><span class="v">${val(S.info.res)}</span></div>
+      <div style="display:flex;gap:10px"><div class="fl hot" style="flex:1" data-open="info" data-focus="gender" tabindex="0"><label>Gender</label><span class="v">${val(S.info.gender)}</span></div><div class="fl hot" style="width:40%" data-open="info" data-focus="age" tabindex="0"><label>Age</label><span class="v">${val(S.info.age)}</span></div></div>
+      <div class="fl hot" data-open="affluence" tabindex="0"><label>Affluence</label><span class="v">${esc(S.info.affluence)}</span></div>
+      <div class="fl hot" data-open="info" data-focus="notes" tabindex="0" style="min-height:62px;align-items:flex-start"><label>Notes</label><span class="v" style="white-space:normal">${val(S.info.notes)}</span></div>
+    </div>
+  </div>
+  <div class="c4 stack">
+    <div class="box hot chars" data-open="chars" tabindex="0">
+      ${dot('chars',V)}
+      <h2 class="band">Characteristics <span class="ico">▽</span></h2>
+      <div class="bd">
+        ${CHARS.map(c=>`<div class="row"><span class="nm"><b>${c}</b>${CHAR_NAMES[c].slice(c.length).toLowerCase()}</span>${fh(S.ch[c],half(S.ch[c]))}</div>`).join('')}
+        <div class="small muted" style="text-align:right;margin-top:3px">Total ${charTotal()} / 280</div>
+      </div>
+    </div>
+    <div class="box hot" data-open="supp" tabindex="0">
+      <h2 class="band">Supplemental Info</h2>
+      <div class="bd">
+        <div class="row"><span class="nm"><b style="font-family:var(--head)">MOV</b></span><span class="fh"><b>${m.v}</b></span></div>
+        <div class="row"><span class="nm">Luck</span>${fh(L??'',S.luck.cur??(L??''),'Starting·Current')}</div>
+        <div class="row"><span class="nm">Magic Pts</span>${isFae()?'<span class="muted small">none (fae)</span>':fh(mp,S.mp.cur??mp,'Starting·Current')}</div>
+        <div class="row hot" data-open="develop" tabindex="0" title="Earn and spend development points"><span class="nm">Development Pts</span>${fh(half2(S.dev.pts),half2(devTotals().earned),'Banked·Earned')}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="c12 box hot" data-open="adv" tabindex="0">
+    ${dot('adv',V)}
+    <h2 class="band">Advantages &amp; Disadvantages <span class="ico">✦</span><span class="hint">click to choose</span></h2>
+    <div class="bd adv-list">${advRows.join('')}</div>
+  </div>
+
+  <div class="c4 box hot" data-open="skills" data-focus="common" tabindex="0">
+    ${dot('skills',V)}
+    <h2 class="band">Common Skills <span class="ico">△</span></h2>
+    <div class="bd">${COMMON.map(k=>{const e=sk.find(x=>x.key===k); return `<div class="row ${e.picked?'boost':''}"><span class="nm">${k}</span>${fh(e.total,e.half)}</div>`;}).join('')}</div>
+  </div>
+  <div class="c4 box hot" data-open="skills" data-focus="expert" tabindex="0">
+    <h2 class="band">Expert Skills <span class="ico">⩓</span></h2>
+    <div class="bd">${Array.from({length:nExp},(_,i)=>{const e=expertRows[i]; return e?`<div class="row ${e.picked?'boost':''}"><span class="nm">${esc(e.key)}${e.src.includes('own')?' <span class="tag">own</span>':''}</span>${fh(e.total,e.half)}</div>`:`<div class="row"><span class="nm"></span>${fh('','')}</div>`;}).join('')}</div>
+  </div>
+  <div class="c4 stack">
+    <div class="box hot" data-open="skills" data-focus="combat" tabindex="0">
+      <h2 class="band">Combat Skills <span class="ico">✺</span></h2>
+      <div class="bd">${COMBAT.map(k=>{const e=sk.find(x=>x.key===k); return `<div class="row ${e.picked?'boost':''}"><span class="nm">${k}</span>${fh(e.total,e.half)}</div>`;}).join('')}</div>
+    </div>
+    <div class="box hot dmg" data-open="damage" tabindex="0">
+      <h2 class="band">Damage <span class="ico">✺</span></h2>
+      <div class="bd">
+        ${[['hurt','Hurt'],['bloodied','Bloodied'],['down','Down'],['impaired','Impaired']].map(([k,l])=>`<label class="tick ${k==='hurt'&&S.dis==='frail'?'off':''}" data-stop><input type="checkbox" data-dmg="${k}" ${S.dmg[k]?'checked':''} ${k==='hurt'&&S.dis==='frail'?'disabled':''}> ${l}</label>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="c12 box">
+    <h2 class="band">Weapons <span class="ico">⌐</span><span class="hint">click a line</span></h2>
+    <div class="bd weap">${wRows.join('')}</div>
+  </div>
+
+  <div class="c12 box">
+    ${dot('magic',V)}
+    <h2 class="band">Magic Spells <span class="ico">✹</span><span class="hint">✓ = mastered</span></h2>
+    <div class="bd spells">${Array.from({length:frontSpellN},(_,i)=>spellSlot(i)).join('')}</div>
+  </div>`;
+
+  const cRows=S.contacts.map((c,i)=>`<div class="crow hot" data-open="contacts" tabindex="0"><span class="nm">${c.n?esc(c.n):''}${c.r?' <span class="muted">/ '+esc(c.r)+'</span>':''}<span class="sub" style="text-align:left">Name · Relationship</span></span><span class="ss"><span class="${c.secure?'on':''}">${c.secure?'☑':'☐'} Secure</span> <span class="${c.sour?'on':''}">${c.sour?'☑':'☐'} Sour</span></span></div>`).join('');
+  document.getElementById('page-back').innerHTML=`
+  <div class="c6 box hot" data-open="info" data-focus="name" tabindex="0"><h2 class="band">Name △ <span style="font-family:var(--body);text-transform:none;letter-spacing:0;font-weight:400;margin-left:8px">${esc(S.info.name)}</span></h2></div>
+  <div class="c6 box hot" data-open="occupation" tabindex="0"><h2 class="band">Occupation △ <span style="font-family:var(--body);text-transform:none;letter-spacing:0;font-weight:400;margin-left:8px">${esc(occName())}</span></h2></div>
+  <div class="c12 box">
+    <h2 class="band">Contacts <span class="ico">👥</span><span class="hint">friends, family &amp; occupational contacts</span></h2>
+    <div class="bd contacts">${cRows}</div>
+  </div>
+  <div class="c6 box hot" data-open="signare" tabindex="0">
+    <h2 class="band">Signare <span class="ico">○</span><span class="hint">${hasMagicPick()?'click to create':'practitioners only'}</span></h2>
+    <div class="bd"><div class="lines" style="min-height:92px">${esc(sigText())}</div></div>
+  </div>
+  <div class="c6 box">
+    <h2 class="band">Magic Spells <span class="ico">✹</span></h2>
+    <div class="bd">${Array.from({length:totalSpellSlots-frontSpellN},(_,i)=>spellSlot(i+frontSpellN)).join('')}</div>
+  </div>
+  <div class="c12 box hot" data-open="backstory" tabindex="0">
+    <h2 class="band">Backstory <span class="ico">📖</span><span class="hint">click for guided questions</span></h2>
+    <div class="bd"><div class="lines tall">${esc(backstorySummary())}</div></div>
+  </div>
+  <div class="c6 box hot" data-open="equip" tabindex="0">
+    ${dot('equip',V)}
+    <h2 class="band">Equipment <span class="ico">☕</span></h2>
+    <div class="bd"><div class="lines med">${esc(S.equip)}</div></div>
+  </div>
+  <div class="c6 box hot" data-open="cases" tabindex="0">
+    <h2 class="band">Case Files <span class="ico">▬</span></h2>
+    <div class="bd"><div class="lines med">${esc(S.cases)}</div></div>
+  </div>`;
+
+  // status pill
+  const all=Object.values(V).flat(); const e=all.filter(x=>x.lvl==='err').length, w=all.filter(x=>x.lvl==='warn').length;
+  const b=document.getElementById('statusBtn');
+  b.innerHTML='Checklist '+(e?`<span class="status err">${e} to fix</span>`:w?`<span class="status warn">${w} to review</span>`:'<span class="status ok">complete</span>');
+  document.getElementById('devBtn').innerHTML='Development'+(S.dev.pts?` <span class="status ok">${String(S.dev.pts).replace('.5','½')} DP</span>`:'')+(S.dev.phase?' <span class="status warn">phase open</span>':'');
+  document.title=(S.info.name?S.info.name+' · ':'')+'Investigator Sheet';
+}
+function backstorySummary(){
+  const b=S.back, L=[];
+  const c=[b.cFamily&&('Family: '+b.cFamily),b.cHome&&('Home: '+b.cHome),b.cWhere&&('Grew up: '+b.cWhere),b.culture&&('Culture: '+b.culture)].filter(Boolean);
+  if(c.length) L.push('Childhood — '+c.join('. ')+'.');
+  const p=[b.pFamily&&('Family: '+b.pFamily),b.pHome&&('Home: '+b.pHome),b.pWhere&&('Lives: '+b.pWhere),b.pCulture&&b.pCulture].filter(Boolean);
+  if(p.length) L.push('Now — '+p.join('. ')+'.');
+  if(b.brush==='yes'){ const q=[b.b1,b.b2,b.b3,b.b4].filter(Boolean); if(q.length) L.push('Brush with the supernatural — '+q.join(' ')); }
+  else if(b.brush==='no') L.push('No brush with the supernatural yet.');
+  if(b.text) L.push(b.text);
+  return L.join('\n');
+}
+function weaponDisplay(w){
+  if(!w.n) return {f:'',h:'',dmg:'',rg:''};
+  let key=w.sk||'Fighting'; const v=skillVal(key);
+  let dmg=w.dm; if(dmg!==''&&dmg!=null&&!isNaN(+dmg)){ dmg=+dmg+(w.melee&&hasAdv('dmgbonus')?1:0); }
+  let rg=w.rg; if(w.thrown){ rg='Touch / '+Math.floor((+S.ch.STR||0)/5); }
+  return {f:v,h:half(v),dmg:String(dmg??''),rg:String(rg??'')};
+}
+
+/* =====================================================================
+   MODALS
+   ===================================================================== */
+const dlg=document.getElementById('dlg'), dBody=document.getElementById('dlgBody'), dTitle=document.getElementById('dlgTitle');
+let cur={id:null,arg:null,focus:null};
+function open(id,arg,focus){ cur={id,arg,focus}; paint(); if(!dlg.open) dlg.showModal(); dBody.scrollTop=0;
+  if(focus){ const el=dBody.querySelector(`[data-f="${focus}"]`); if(el){ el.scrollIntoView({block:'center'}); if(el.matches('input,textarea,select')) el.focus(); } } }
+function paint(){
+  const st=dBody.scrollTop; const act=document.activeElement; const fb=act&&dBody.contains(act)&&act.dataset.b;
+  const [t,h]=VIEWS[cur.id](cur.arg); dTitle.textContent=t; dBody.innerHTML=h; dBody.scrollTop=st;
+  if(fb&&(act.type==='text'||act.type==='number'||act.tagName==='TEXTAREA')){ const el=dBody.querySelector(`[data-b="${CSS.escape(fb)}"]`); if(el) el.focus(); }
+}
+function refresh(){ save(); renderSheet(); if(dlg.open) paint(); }
+function softRefresh(){ save(); renderSheet(); }
+
+function rulesBox(html){ return `<div class="rules">${html}</div>`; }
+function msgs(step,only){ const V=validate(); return (V[step]||[]).filter(m=>!only||only.test(m.msg)).map(m=>`<div class="msg ${m.lvl}">${esc(m.msg)}</div>`).join(''); }
+function fld(label,inner,f){ return `<label class="fld" ${f?`data-f="${f}"`:''}><span>${label}</span>${inner}</label>`; }
+function txt(path,f,ph2=''){ return `<input type="text" data-b="${path}" value="${esc(get(path))}" placeholder="${esc(ph2)}" ${f?`data-f="${f}"`:''}>`; }
+function get(path){ return path.split('.').reduce((o,k)=>o==null?undefined:o[k],S) ?? ''; }
+function set(path,v){ const ks=path.split('.'); let o=S; for(let i=0;i<ks.length-1;i++) o=o[ks[i]]; o[ks.at(-1)]=v; }
+
+const VIEWS={
+ info(){
+  return ['Investigator Info',`
+  ${rulesBox('<p>Choose name, age and details freely. Age has no rules effect unless you enable the optional <b>Age and MOV</b> rule (Rules options). Police Officer, Lawyer, Architect and similar professions need an adult (18+).</p>')}
+  <div class="grid2">
+   ${fld('Name',txt('info.name','name'))}
+   ${fld('Occupation',`<button class="btn" data-a="open" data-x="occupation" style="text-align:left">${occ()?esc(occName()):'Choose occupation…'}</button>`)}
+   ${fld('Place of birth',txt('info.pob','pob'))}
+   ${fld('Residence',txt('info.res','res','An area is enough — or “The Folly”'))}
+   ${fld('Gender',txt('info.gender','gender'))}
+   ${fld('Age',`<input type="number" min="10" max="120" data-b="info.age" data-t="n" data-r value="${esc(S.info.age)}" data-f="age">`)}
+   ${fld('Affluence',`<button class="btn" data-a="open" data-x="affluence" style="text-align:left">${esc(S.info.affluence)} — change…</button>`)}
+  </div>
+  <div style="margin-top:10px">${fld('Notes',`<textarea data-b="info.notes" data-f="notes" placeholder="Appearance, mannerisms, anything else">${esc(S.info.notes)}</textarea>`)}</div>
+  <h4>Portrait</h4>
+  <div class="row-flex" data-f="portrait">
+    ${S.info.portrait?`<img src="${S.info.portrait}" alt="" style="width:90px;height:108px;object-fit:cover;border-radius:4px;border:1px solid var(--line)">`:''}
+    <button class="btn" data-a="portrait">${S.info.portrait?'Replace image…':'Upload image…'}</button>
+    ${S.info.portrait?'<button class="btn" data-a="portraitClear">Remove</button>':''}
+  </div>
+  <h4>Status</h4>${msgs('occ')}`];
+ },
+ occupation(){
+  const o=occ(); const {r,c}=occReqRec();
+  const cards=OCC.map(x=>`<button class="card ${x.id===S.info.occ?'sel':''}" data-a="setOcc" data-x="${x.id}"><div class="t">${esc(x.n)}${x.rivers?' <span class="tag">in the novels</span>':''}</div><div class="d">${esc(x.d)}</div></button>`).join('');
+  let det='';
+  if(o){
+    det=`<h4>${esc(occName())}</h4>
+    ${o.custom?`<div class="grid2">${fld('Occupation name',txt('info.occName','','e.g. Antiques dealer'))}${fld('Required skills (comma-separated, 1–3)',txt('info.occReq','','e.g. Appraise, Art/Craft (Pottery)'))}${fld('Recommended skills',txt('info.occRec','','e.g. History, Languages, Observation'))}</div><p class="small muted">Tip: write specialised skills as “Art/Craft (Pottery)”, “Science (Biology)”, “Languages”. Press Done then reopen to refresh the lists.</p>`:''}
+    <div class="grid2">
+     <div><div class="fld"><span>Required skills</span></div><div class="chips">${r.length?r.map(t=>`<span class="chip ${tokenSatisfied(t)?'ok':'need'}">${esc(tokLabel(t))}</span>`).join(''):'<span class="muted small">None — choose freely</span>'}</div></div>
+     <div><div class="fld"><span>Recommended skills</span></div><div class="chips">${c.map(t=>`<span class="chip ${tokenSatisfied(t)?'ok':''}">${esc(tokLabel(t))}</span>`).join('')}${o.anyRec?'<span class="chip">+ any skill from their service</span>':''}</div></div>
+    </div>
+    ${o.note?rulesBox(esc(o.note)):''}
+    ${!o.custom?`<p><b>Suggested contacts:</b> ${esc(o.k)}</p><p><b>Equipment:</b> ${esc(o.e)}</p>`:''}
+    <div class="row-flex"><button class="btn primary" data-a="open" data-x="skills">Choose skills →</button>${!o.custom&&o.e?'<button class="btn" data-a="occEquip">Add suggested equipment</button>':''}</div>`;
+  }
+  return ['Step 1 · Occupation',`
+  ${rulesBox('<p>Your occupation sets your <b>required</b> skills (must be among your six starting skills) and <b>recommended</b> skills (pick any that fit). It also suggests contacts and equipment. Everyone can have civilian or police jobs — the Folly uses many civilian consultants.</p>')}
+  ${det}
+  <h4>All occupations</h4><div class="cards">${cards}</div>`];
+ },
+ affluence(){
+  return ['Affluence Rating',`
+  ${rulesBox('<p>Default is <b>Average</b>. Poor is allowed (with drawbacks). <b>Wealthy</b> requires the Wealthy advantage; <b>Rich</b> requires the Rich advantage (and Dilettantes are always Rich). Anything but Average should be agreed with the GM. No bookkeeping: spending within your living standard just happens.</p>')}
+  ${AFFLUENCE.map(a=>{ const need=a.n==='Wealthy'?'wealthy':a.n==='Rich'?'rich':null; const blocked=need&&!hasAdv(need); return `<label class="opt ${S.info.affluence===a.n?'sel':''} ${blocked?'no':''}"><input type="radio" name="aff" data-b="info.affluence" value="${a.n}" ${S.info.affluence===a.n?'checked':''}><div><div class="t">${a.n}</div><div class="d">${esc(a.d)}</div><div class="small"><b>Home:</b> ${esc(a.acc)} <b>Travel:</b> ${esc(a.trav)} <b>Major purchases:</b> ${esc(a.maj)}</div>${blocked?`<div class="why">Needs the ${need==='rich'?'Rich':'Wealthy'} advantage</div>`:''}</div></label>`; }).join('')}
+  <p class="small muted">The Folly can feed, house and bankroll its people, which softens a Poor rating.</p>
+  ${msgs('back',/ffluence|Rich|Wealthy/)}`];
+ },
+ chars(){
+  const lo=S.opt.wide?20:30, hi=S.opt.wide?90:80, step=S.opt.free?1:10, tot=charTotal();
+  const unlock={STR:'Damage Bonus, Natural Toughness (with CON)',CON:'Natural Toughness (with STR)',DEX:'Speedy, Fast Reactions, Signature Weapon/Firearm',INT:'Magical (with POW), The Knowledge',POW:'Magical (with INT), Steadfast'};
+  return ['Step 2 · Characteristics',`
+  ${rulesBox(`<p>Share <b>280 points</b> among the five characteristics, each <b>${lo}–${hi}</b>${S.opt.free?' (free allocation on)':', in blocks of 10'}. Average human = 50. Half values are calculated for you (round down). <b>60+</b> unlocks advantages: ${CHARS.map(c=>`${c} → ${unlock[c]}`).join('; ')}.</p>`)}
+  <div class="row-flex" style="justify-content:space-between"><div><span class="muted">Points used</span> <span class="big" style="color:${tot===280?'var(--ok)':'var(--err)'}">${tot}</span><span class="muted"> / 280</span></div>
+   <div class="row-flex small"><span class="muted">Presets:</span>
+    <button class="btn sm" data-a="preset" data-x="50,50,60,60,60">Fairly average</button>
+    <button class="btn sm" data-a="preset" data-x="30,50,60,60,80">Strengths &amp; weaknesses</button>
+    <button class="btn sm" data-a="preset" data-x="30,30,60,80,80">Extremes</button>
+    <button class="btn sm" data-a="preset" data-x="50,40,50,70,70">Practitioner</button>
+    <button class="btn sm" data-a="preset" data-x="70,50,40,60,60">Nafeesa (example)</button>
+   </div></div>
+  ${CHARS.map(c=>{ const v=+S.ch[c]; return `<div class="charrow"><div><div class="nm">${c} · ${CHAR_NAMES[c]}</div><div class="small muted">${esc(CHAR_DESC[c])}</div></div>
+    <div class="stepper"><button data-a="chr" data-x="${c}" data-y="-${step}" ${v-step<lo?'disabled':''} aria-label="Lower ${c}">−</button><output>${v}</output><button data-a="chr" data-x="${c}" data-y="${step}" ${v+step>hi?'disabled':''} aria-label="Raise ${c}">+</button><span class="muted small" style="margin-left:6px">half ${half(v)}</span></div>
+    <div class="mean">${esc(meaning(c,v))}</div></div>`; }).join('')}
+  <p class="small muted">Presets fill STR, CON, DEX, INT, POW in that order — then move points around.</p>
+  <h4>Status</h4>${msgs('chars')}`];
+ },
+ supp(){
+  const m=mov(), L=luckStart(), mp=mpStart();
+  return ['Supplemental Info',`
+  <h4>Movement (MOV)</h4>
+  ${rulesBox(`<p>Default MOV 8 (Speedy 9; Slow-Footed 5). Move up to 5× MOV metres per combat round.${S.opt.ageMov?' Age rule on: −1 per decade from your 40s.':''}</p>`)}
+  <p><span class="big">${m.v}</span> <span class="muted">${esc(m.why)} · ${m.v*5} m per round</span></p>
+  <h4>Luck</h4>
+  ${isFae()?rulesBox(`<p>Fae Luck equals POW (<b>${S.ch.POW}</b>) and refreshes every day at a set time you choose.</p>`)+fld('Luck refreshes at',txt('opt.refresh','','e.g. midnight, sunrise, changing of the guard'))
+   :rulesBox('<p>Roll <b>2D10 + 50</b> for starting Luck. It rises and falls in play; update “Starting” after each session.</p>')+`
+  <div class="row-flex"><button class="btn primary" data-a="rollLuck">Roll 2D10 + 50</button>${S.luck.dice?`<span class="dice"><span class="die">${S.luck.dice[0]}</span><span class="die">${S.luck.dice[1]}</span> + 50 =</span>`:''}
+   <label class="fld" style="flex-direction:row;align-items:center;gap:6px"><span>Starting</span><input type="number" data-b="luck.start" data-t="n" data-r value="${esc(S.luck.start??'')}"></label></div>`}
+  <div class="row-flex" style="margin-top:8px"><label class="fld" style="flex-direction:row;align-items:center;gap:6px"><span>Current Luck</span><input type="number" data-b="luck.cur" data-t="n" value="${esc(S.luck.cur??'')}" placeholder="${esc(L??'')}"></label></div>
+  <h4>Magic points</h4>
+  ${isFae()?'<p class="muted">Fae investigators have no magic points; they spend Luck on their affinity instead.</p>':rulesBox(`<p>Starting magic points = POW ÷ 5 (<b>${Math.floor(S.ch.POW/5)}</b>) + 1 per mastered spell (<b>${masteredCount()}</b>) = <b>${mp}</b>. Spell cost = its order${S.dis==='exhausting'?' +1 (Magic is Exhausting)':''}.</p>`)+`
+  <label class="fld" style="flex-direction:row;align-items:center;gap:6px"><span>Current magic points</span><input type="number" data-b="mp.cur" data-t="n" value="${esc(S.mp.cur??'')}" placeholder="${esc(mp??'')}"></label>`}`];
+ },
+ adv(){
+  const slots=advSlots();
+  const advHtml=ADV.map(a=>{ const on=hasAdv(a.id); const why=advCheck(a); const full=!on&&(slots+(a.major?2:1)>2);
+    return `<label class="opt ${on?'sel':''} ${(!on&&(why.length||full))?'no':''}"><input type="checkbox" data-a="toggleAdv" data-x="${a.id}" ${on?'checked':''}><div style="flex:1"><div class="t">${a.n}${a.major?' <span class="tag">major · 2 choices</span>':''}</div><div class="d">${esc(a.d)}</div>
+      <div class="small muted">Prerequisite: ${Object.keys(a.pre).length?[...CHARS.filter(c=>a.pre[c]).map(c=>c+' '+a.pre[c]),a.pre.skill?a.pre.skill[0]+' '+a.pre.skill[1]+'%':null].filter(Boolean).join(', '):'none'}</div>
+      ${why.length?`<div class="why">Not met: ${esc(why.join(', '))}</div>`:''}
+      ${on&&a.field?`<div style="margin-top:6px">${fld(a.field,`<input type="text" data-b="advField.${a.id}" value="${esc(S.advField[a.id]||'')}">`)}</div>`:''}</div></label>`; }).join('');
+  const pk=S.pkg.id;
+  const disHtml=DIS.map(d=>{ const why=disCheck(d); return `<label class="opt ${S.dis===d.id?'sel':''} ${why.length&&S.dis!==d.id?'no':''}"><input type="radio" name="dis" data-a="setDis" data-x="${d.id}" ${S.dis===d.id?'checked':''}><div><div class="t">${d.n}</div><div class="d">${esc(d.d)}</div>${why.length?`<div class="why">${esc(why.join(', '))}</div>`:''}</div></label>`; }).join('');
+  return ['Step 3 · Advantages',`
+  ${rulesBox('<p>Choose up to <b>two</b> advantages. <b>Major</b> advantages (Magical, Rich) count as both. You must meet each prerequisite — skill prerequisites use your current skill values, so pick skills first if needed (Signature Weapon/Firearm, The Knowledge).</p>')}
+  <p><b>${slots}</b> of 2 choices used.</p>
+  ${advHtml}
+  <h4>Experience package (optional, GM’s permission)</h4>
+  ${rulesBox('<p>For more experienced investigators. Most packages give <b>60 extra skill points</b> for required/recommended skills (no skill above 80% this way). Every package <b>requires one disadvantage</b>.</p>')}
+  <label class="opt ${!pk?'sel':''}"><input type="radio" name="pkg" data-a="setPkg" data-x="" ${!pk?'checked':''}><div><div class="t">No package</div><div class="d">Standard character creation.</div></div></label>
+  ${PKG.map(p=>`<label class="opt ${pk===p.id?'sel':''}"><input type="radio" name="pkg" data-a="setPkg" data-x="${p.id}" ${pk===p.id?'checked':''}><div style="flex:1"><div class="t">${p.n}</div><div class="d">${esc(p.d)}${p.occ?' Occupation: '+esc(occById(p.occ).n)+'.':''}</div>
+   ${pk==='experienced'&&p.id==='experienced'?`<div class="row-flex small" style="margin-top:6px"><label><input type="radio" name="pmode" data-b="pkg.mode" value="points" ${S.pkg.mode==='points'?'checked':''}> 60 points on any skills</label><label><input type="radio" name="pmode" data-b="pkg.mode" value="newskill" ${S.pkg.mode==='newskill'?'checked':''}> one extra new skill at 60% (7 picks)</label></div>`:''}</div></label>`).join('')}
+  <h4>Disadvantage ${pk?'(required — choose one)':'(only with a package)'}</h4>
+  ${pk||S.dis?`<label class="opt ${!S.dis?'sel':''}"><input type="radio" name="dis" data-a="setDis" data-x="" ${!S.dis?'checked':''}><div><div class="t">None</div></div></label>${disHtml}`:'<p class="muted small">Choose an experience package to unlock disadvantages.</p>'}
+  <h4>Status</h4>${msgs('adv')}`];
+ },
+ skills(){
+  const sk=computeSkills(); const lim=pickLimit(); const o=occ(); const {r,c}=occReqRec();
+  const pickSet=new Set(S.picks.map(p=>p.skill));
+  const P=S.pkg.id?PKG.find(p=>p.id===S.pkg.id):null; const pts=S.pkg.id&&S.pkg.mode==='points';
+  const spent=sk.reduce((a,e)=>a+e.pkg,0);
+  const reqChips=r.map(t=>{ const ok=tokenSatisfied(t); const canAdd=!ok&&!t.any&&!(t.alt&&false); return ok?`<span class="chip ok">✓ ${esc(tokLabel(t))}</span>`:(t.any?`<span class="chip need">${esc(tokLabel(t))}</span>`:`<button class="chip need" data-a="addTok" data-x='${esc(JSON.stringify(t))}'>+ ${esc(tokLabel(t))}</button>`); }).join('');
+  const recChips=c.map(t=>tokenSatisfied(t)?`<span class="chip ok">✓ ${esc(tokLabel(t))}</span>`:`<button class="chip" data-a="addTok" data-x='${esc(JSON.stringify(t))}'>+ ${esc(tokLabel(t))}</button>`).join('');
+  const ccRow=k=>{ const e=sk.find(x=>x.key===k); const on=pickSet.has(k); const viaMagic=k==='Sense Vestigia'&&(hasMagicPick()||isFae());
+    return `<tr class="${e.picked?'picked':''}"><td><label><input type="checkbox" data-a="pick" data-x="${k}" ${on?'checked':''} ${!on&&(S.picks.length>=lim||viaMagic)?'disabled':''}> ${k}</label>${viaMagic?' <span class="tag">free 60%</span>':''}${on&&viaMagic?' <span class="why">already free — pick something else</span>':''}<div class="desc">${esc(SKILL_DESC[k])}</div></td>
+    <td class="n">${e.base}</td>${pts?`<td class="n">${pkgEligible(k)?`<input type="number" min="0" max="60" step="5" data-b="pkg.pts.${k}" data-t="n" data-r value="${e.pkg||''}">`:'<span class="muted">—</span>'}</td>`:''}
+    <td class="n"><input type="number" step="1" data-b="adj.${k}" data-t="n" data-r value="${e.adjv||''}" title="Improvements gained in play"></td><td class="n"><b>${e.total}</b>/${e.half}</td></tr>`; };
+  const expertPicks=S.picks.map((p,i)=>({p,i})).filter(({p})=>!COMMON.includes(p.skill)&&!COMBAT.includes(p.skill));
+  const pickEditor=({p,i})=>{
+    let inner='';
+    if(SPECIALISED.includes(p.skill)){
+      const sp=p.specs||['','',''];
+      const labs=['First — 60%','Second — 30%','Third — 30%'];
+      inner=`<div class="grid3" style="margin-top:6px">${[0,1,2].map(j=>fld(labs[j],`<input type="text" list="dl-${p.skill.replace(/\W/g,'')}" data-b="picks.${i}.specs.${j}" data-r value="${esc(sp[j]||'')}" placeholder="${j?'choose or type':'required'}">`)).join('')}</div>`;
+    }
+    if(p.skill==='Medicine'&&S.info.occ==='nurse'){
+      inner=`<label class="small" style="display:block;margin-top:6px"><input type="checkbox" data-b="nurse.split" ${S.nurse.split?'checked':''}> Take Medicine at 40% plus another expert skill at 40%</label>
+      ${S.nurse.split?`<div class="grid2" style="margin-top:6px">${fld('Second expert skill (40%)',`<select data-b="nurse.skill"><option value="">—</option>${EXPERT.filter(x=>x!=='Medicine'&&x!=='Magic').map(x=>`<option ${S.nurse.skill===x?'selected':''}>${x}</option>`).join('')}</select>`)}${SPECIALISED.includes(S.nurse.skill)?fld('Specialisation',`<input type="text" list="dl-${S.nurse.skill.replace(/\W/g,'')}" data-b="nurse.spec" data-r value="${esc(S.nurse.spec)}">`):''}</div>`:''}`;
+    }
+    const val=p.skill==='Magic'?(S.pkg.id==='spellcaster'?70:60):(p.skill==='Medicine'&&S.nurse.split&&S.info.occ==='nurse'?40:60);
+    return `<div class="opt sel" style="display:block"><div class="row-flex" style="justify-content:space-between"><div><span class="t">${esc(p.skill)}</span>${customSkill(p.skill)?' <span class="tag">custom</span>':''} <span class="muted small">${val}%${SPECIALISED.includes(p.skill)?' / 30% / 30%':''}</span></div><button class="btn sm" data-a="unpick" data-x="${i}">Remove</button></div><div class="d small">${esc(skillDesc(p.skill))}</div>${inner}</div>`;
+  };
+  const addable=allExpert().filter(x=>!(pickSet.has(x)&&!SPECIALISED.includes(x)));
+  const usedKeys=new Set(sk.map(e=>e.key));
+  const customList=S.customSkills.map((c,i)=>`<div class="opt" style="align-items:center"><div style="flex:1"><div class="t">${esc(c.n)} <span class="tag">custom</span></div><div class="d small">${esc(c.d||'No description')} · learned in play at ½ ${esc(c.c)}</div></div>${usedKeys.has(c.n)?'<span class="small muted">in use</span>':`<button class="btn sm" data-a="delCustom" data-x="${i}">Delete</button>`}</div>`).join('');
+  const expertTable=sk.filter(e=>e.cat==='expert').sort((a,b)=>a.key.localeCompare(b.key)).map(e=>`<tr class="${e.picked?'picked':''}"><td>${esc(e.key)} <span class="muted small">${e.src.map(s=>({own:'own language',bilingual:'bilingual',pick:'starting skill',pick30:'secondary',extra:'added'}[s]||'')).filter(Boolean).join(', ')}</span></td><td class="n">${e.base}</td>${pts?`<td class="n">${pkgEligible(e.key)?`<input type="number" min="0" max="60" step="5" data-b="pkg.pts.${e.key}" data-t="n" data-r value="${e.pkg||''}">`:'<span class="muted">—</span>'}</td>`:''}<td class="n"><input type="number" data-b="adj.${e.key}" data-t="n" data-r value="${e.adjv||''}"></td><td class="n"><b>${e.total}</b>/${e.half}</td><td>${e.src.includes('extra')?`<button class="btn sm" data-a="rmExtra" data-x="${esc(e.key)}">×</button>`:''}</td></tr>`).join('');
+  const datalists=SPECIALISED.map(s=>`<datalist id="dl-${s.replace(/\W/g,'')}">${SPEC[s].map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`).join('');
+  return ['Step 4 · Skills',`${datalists}
+  ${rulesBox(`<ul>
+   <li>Choose <b>${lim} starting skills</b> and boost each to <b>60%</b>. Include all <b>required</b> skills, then any recommended or other skills.</li>
+   <li>Unchosen common and combat skills stay at <b>30%</b>; unchosen expert skills are <b>0%</b> (you can’t use them).</li>
+   <li><b>Art/Craft, Science and Languages</b>: one pick = one specialisation at 60% plus two others at 30%.</li>
+   <li><b>Magic</b> needs the Magical advantage and gives <b>Sense Vestigia 60%</b> free.</li>
+   <li>Your <b>own language</b> is free at INT or 60% (whichever is higher). A bilingual upbringing gives a second language free (same value, or half INT/30% if less fluent).</li>
+   ${P?`<li><b>${esc(P.n)} package:</b> ${pts?`spend <b>60 points</b> on ${P.any?'any':'required/recommended'} skills (the “Pkg” column), max 80% each.`:'one extra starting skill at 60% (7 picks).'}${P.spell?' Magic starts at 70%.':''}</li>`:''}
+   <li>To improve skills after play, use <a href="#" data-a="open" data-x="develop">Development</a>. The “Adj” column is only for manual GM adjustments.</li></ul>`)}
+  <div class="row-flex" style="justify-content:space-between"><div><span class="big" style="color:${S.picks.length===lim?'var(--ok)':S.picks.length>lim?'var(--err)':'var(--ink)'}">${S.picks.length}</span><span class="muted"> / ${lim} starting skills chosen</span></div>${pts?`<div><span class="big" style="color:${spent===60?'var(--ok)':spent>60?'var(--err)':'var(--ink)'}">${spent}</span><span class="muted"> / 60 package points</span></div>`:''}</div>
+  ${o?`<div style="margin:8px 0"><div class="fld"><span>Required for ${esc(occName())}</span></div><div class="chips">${reqChips||'<span class="muted small">none</span>'}</div></div>
+       <div style="margin:8px 0"><div class="fld"><span>Recommended</span></div><div class="chips">${recChips}${o.anyRec?'<span class="chip">+ any skill from their service</span>':''}</div></div>`:'<p class="msg warn">Choose an occupation first to see required and recommended skills. <button class="btn sm" data-a="open" data-x="occupation">Choose…</button></p>'}
+  <h4 data-f="common">Common skills</h4>
+  <table class="tbl"><tr><th>Skill</th><th class="n">Base</th>${pts?'<th class="n">Pkg</th>':''}<th class="n">Adj</th><th class="n">Full/Half</th></tr>${COMMON.map(ccRow).join('')}</table>
+  <h4 data-f="combat">Combat skills</h4>
+  <table class="tbl"><tr><th>Skill</th><th class="n">Base</th>${pts?'<th class="n">Pkg</th>':''}<th class="n">Adj</th><th class="n">Full/Half</th></tr>${COMBAT.map(ccRow).join('')}</table>
+  <h4 data-f="expert">Expert skills — starting picks</h4>
+  ${expertPicks.map(pickEditor).join('')||'<p class="muted small">No expert skills chosen yet.</p>'}
+  <div class="row-flex" style="margin-top:6px"><select id="addExpert" style="width:auto"><option value="">Add an expert skill…</option>${addable.map(x=>{ const dis=x==='Magic'&&(!hasAdv('magical')||isFae()); return `<option value="${x}" ${dis?'disabled':''}>${x}${dis?' (needs Magical)':''}</option>`; }).join('')}</select>
+   <button class="btn primary" data-a="addExpert" ${S.picks.length>=lim?'disabled':''}>Add as starting skill</button>
+   <button class="btn" data-a="addExtra" title="Adds the skill at 0% — for package points or skills learned in play">Add at 0% (package / in play)</button></div>
+  <h4 data-f="custom">Custom expert skill</h4>
+  ${rulesBox('<p>With the GM’s approval you can create an expert skill that isn’t in the book (p. 321), e.g. <i>Anthropology</i>, <i>Heraldry</i>, <i>Brewing</i>. First check whether an existing skill or specialisation already covers it. Agree with the GM what it does, what opposes it, and what Regular and Hard tasks look like.</p>')}
+  ${customList}
+  <div class="grid3">
+   ${fld('Skill name','<input type="text" id="cusName" placeholder="e.g. Heraldry">')}
+   ${fld('Characteristic (for learning it later)',`<select id="cusChar">${CHARS.map(c=>`<option ${c==='INT'?'selected':''}>${c}</option>`).join('')}</select>`)}
+   ${fld('Short description','<input type="text" id="cusDesc" placeholder="What the skill covers">')}
+  </div>
+  <div class="row-flex" style="margin-top:8px"><button class="btn primary" data-a="addCustom" data-x="pick" ${S.picks.length>=lim?'disabled':''}>Create &amp; add as starting skill (60%)</button><button class="btn" data-a="addCustom" data-x="extra">Create &amp; add at 0%</button><button class="btn" data-a="addCustom" data-x="">Create only</button></div>
+  <h4>Languages</h4>
+  <div class="grid3">
+   ${fld('Own language (mother tongue)',`<input type="text" list="dl-Languages" data-b="lang.own" data-r value="${esc(S.lang.own)}">`)}
+   ${fld('Bilingual upbringing?',`<select data-b="lang.mode"><option value="none" ${S.lang.mode==='none'?'selected':''}>No</option><option value="equal" ${S.lang.mode==='equal'?'selected':''}>Yes — equally fluent</option><option value="less" ${S.lang.mode==='less'?'selected':''}>Yes — less fluent in second</option></select>`)}
+   ${S.lang.mode!=='none'?fld('Second language',`<input type="text" list="dl-Languages" data-b="lang.second" data-r value="${esc(S.lang.second)}">`):''}
+  </div>
+  <p class="small muted">Newtonian practitioners don’t need Latin to cast spells, though Nightingale teaches it. More languages mean taking the Languages skill.</p>
+  <h4>All expert skills</h4>
+  <table class="tbl"><tr><th>Skill</th><th class="n">Base</th>${pts?'<th class="n">Pkg</th>':''}<th class="n">Adj</th><th class="n">Full/Half</th><th></th></tr>${expertTable}</table>
+  <h4>Status</h4>${msgs('skills')}`];
+ },
+ weapon(i){
+  const w=S.weapons[i]; const d=weaponDisplay(w);
+  const opts=WEAPONS.map((x,j)=>`<option value="w${j}">${esc(x.n)}</option>`).join('')+SPELLS.filter(s=>s.atk).map(s=>`<option value="s${s.n}">Spell: ${esc(s.n)}</option>`).join('');
+  const sig=hasAdv('sigweap')||hasAdv('sigfire');
+  return ['Weapon '+(i+1),`
+  ${rulesBox(`<p>Melee weapons use <b>Fighting</b>; thrown weapons can use <b>Athletics</b> (range STR÷5 m); bows and guns use <b>Firearms</b>. Most melee weapons and regular handguns do <b>1</b> base damage; heavy handguns, rifles, shotguns and automatic weapons do <b>2</b>. On a hit, roll damage and add it to base damage.${hasAdv('dmgbonus')?' <b>Damage Bonus:</b> +1 on melee weapons (applied automatically).':''}</p>`)}
+  <div class="row-flex">${fld('Pick from Table 3',`<select data-a="pickWeapon" data-x="${i}"><option value="">Choose…</option>${opts}</select>`)}<button class="btn" data-a="clearWeapon" data-x="${i}">Clear line</button></div>
+  <div class="grid2" style="margin-top:10px">
+   ${fld('Name',txt('weapons.'+i+'.n'))}
+   ${fld('Skill',`<select data-b="weapons.${i}.sk">${['Fighting','Firearms','Athletics','Magic'].map(s=>`<option ${w.sk===s?'selected':''}>${s}</option>`).join('')}</select>`)}
+   ${fld('Base damage',`<input type="text" data-b="weapons.${i}.dm" data-r value="${esc(w.dm)}">`)}
+   ${fld('Range (m)',`<input type="text" data-b="weapons.${i}.rg" data-r value="${esc(w.rg)}" ${w.thrown?'disabled':''}>`)}
+  </div>
+  <div class="row-flex" style="margin-top:8px">
+   <label><input type="checkbox" data-b="weapons.${i}.melee" ${w.melee?'checked':''}> Melee weapon (Damage Bonus applies)</label>
+   <label><input type="checkbox" data-b="weapons.${i}.thrown" ${w.thrown?'checked':''}> Can be thrown (range STR÷5)</label>
+   ${sig?`<label><input type="checkbox" data-b="weapons.${i}.sig" ${w.sig?'checked':''}> Signature weapon ★ (bonus die on damage)</label>`:''}
+  </div>
+  ${w.note?`<p class="small">${esc(w.note)}</p>`:''}
+  <p>On the sheet: <b>${esc(w.n||'—')}</b> · ${d.f}/${d.h} · damage ${esc(d.dmg||'—')} · range ${esc(d.rg||'—')}</p>
+  <div class="row-flex">${i>0?`<button class="btn" data-a="open" data-x="weapon" data-y="${i-1}">← Previous</button>`:''}${i<5?`<button class="btn" data-a="open" data-x="weapon" data-y="${i+1}">Next →</button>`:''}</div>`];
+ },
+ spells(){
+  const known={}; S.spells.forEach(s=>known[s.n]=!!s.m);
+  const caster=hasMagicPick();
+  const sp=S.pkg.id==='spellcaster';
+  const orders=[1,2,3,4,5,6];
+  const list=o=>SPELLS.filter(s=>s.o===o).map(s=>{ const k=s.n in known; const ok=prereqOK(s,known); const cannot=!k&&!ok;
+    return `<div class="opt ${k?'sel':''} ${cannot?'no':''}"><input type="checkbox" data-a="toggleSpell" data-x="${esc(s.n)}" ${k?'checked':''} aria-label="Know ${esc(s.n)}"><div style="flex:1"><div class="row-flex" style="justify-content:space-between"><span class="t">${esc(s.n)}</span><span class="small muted">Order ${s.o} · cost ${spellCost(s)} MP</span></div><div class="d">${esc(s.d)}</div><div class="small muted">Prerequisite: ${esc(preText(s))}</div>${!ok?`<div class="why">Prerequisite not met</div>`:''}${k?`<label class="small"><input type="checkbox" data-a="masterSpell" data-x="${esc(s.n)}" ${known[s.n]?'checked':''}> Mastered (bonus die to cast; +1 magic point)</label>`:''}</div></div>`; }).join('');
+  return ['Magic Spells',`
+  ${!caster?rulesBox('<p><b>Your investigator can’t cast spells yet.</b> Take the <b>Magical</b> advantage (INT 60 & POW 60) and choose <b>Magic</b> as a starting skill. You can still browse the spells.</p>'):''}
+  ${rulesBox(`<ul>
+   <li>Starting practitioners know <b>${sp?'three first-order spells (one mastered) and two second-order spells (one mastered)':'two first-order spells (one mastered) and one second-order spell (unmastered)'}</b>.</li>
+   <li><b>Newtonian apprentice</b> (trained at the Folly): Werelight is one first-order spell, and it’s mastered. Impello is the usual second spell.</li>
+   <li><b>Hedge wizard</b> (self-taught or taught elsewhere): any spells; master one first-order spell.</li>
+   <li>You must know a spell’s prerequisites. Mastered spells gain a bonus die to cast and +1 magic point each. Later, you must master two spells of one order before mastering the next.</li></ul>`)}
+  <div class="row-flex"><label class="opt ${S.magicType==='apprentice'?'sel':''}" style="margin:0"><input type="radio" name="mt" data-b="magicType" value="apprentice" ${S.magicType==='apprentice'?'checked':''}><div><div class="t">Newtonian apprentice</div><div class="d">Trained by Nightingale and Varvara at the Folly.</div></div></label>
+   <label class="opt ${S.magicType==='hedge'?'sel':''}" style="margin:0"><input type="radio" name="mt" data-b="magicType" value="hedge" ${S.magicType==='hedge'?'checked':''}><div><div class="t">Hedge wizard</div><div class="d">Discovered it spontaneously or learned from another tradition.</div></div></label>
+   ${S.magicType==='apprentice'?'<button class="btn" data-a="apprenticeStart">Set up Werelight (mastered)</button>':''}</div>
+  <h4>Status</h4>${msgs('magic')||'<p class="muted small">—</p>'}
+  <p class="small">Known: ${S.spells.map(s=>esc(s.n)+(s.m?' ✓':'')).join(', ')||'none'} · Magic points: ${mpStart()??'—'}</p>
+  ${orders.map(o=>`<details class="spellord" ${o<=2||SPELLS.some(s=>s.o===o&&s.n in known)?'open':''}><summary>${['First','Second','Third','Fourth','Fifth','Sixth'][o-1]} order spells ${o>2?'<span class="muted small" style="text-transform:none;letter-spacing:0">— learned later in play</span>':''}</summary>${list(o)}</details>`).join('')}`];
+ },
+ damage(){
+  return ['Damage',`
+  ${rulesBox('<ul><li><b>Hurt</b> — 1 damage: minor wounds.</li><li><b>Bloodied</b> — 2 damage: seriously injured.</li><li><b>Down</b> — 3 damage: out of the fight.</li><li><b>Impaired</b> — from mental trauma or injury; see Impairment (p. 118).</li><li>4 damage is a Mortal Wound; 5 is a fatal blow. The GM will tell you what to tick.</li></ul>'+(S.dis==='frail'?'<p><b>Frail:</b> you have no Hurt level — 1 damage makes you Bloodied.</p>':'')+(hasAdv('tough')?'<p><b>Natural Toughness:</b> unarmed and blunt attacks do 1 less damage to you.</p>':'')+(hasAdv('steadfast')?'<p><b>Steadfast:</b> no impairment from stress or the supernatural.</p>':''))}
+  ${[['hurt','Hurt'],['bloodied','Bloodied'],['down','Down'],['impaired','Impaired']].map(([k,l])=>`<label class="opt ${S.dmg[k]?'sel':''}"><input type="checkbox" data-b="dmg.${k}" ${S.dmg[k]?'checked':''} ${k==='hurt'&&S.dis==='frail'?'disabled':''}><div class="t">${l}</div></label>`).join('')}`];
+ },
+ contacts(){
+  const o=occ();
+  return ['Contacts',`
+  ${rulesBox('<p><b>Friends and family:</b> name one or more people your investigator trusts completely — a relative, partner, child, friend or neighbour. <b>Occupational contacts</b> give a bonus die on Social rolls when a roll is needed. Tick <b>Secure</b> for a good relationship; tick <b>Sour</b> if you’ve damaged it (they may not help again).'+(hasAdv('connected')?' Your <b>Connected</b> patron can go here too.':'')+'</p>')}
+  ${o&&o.k?`<p class="small"><b>Suggested contacts for ${esc(occName())}:</b> ${esc(o.k)}</p>`:''}
+  <table class="tbl"><tr><th>Name</th><th>Relationship</th><th>Secure</th><th>Sour</th></tr>
+  ${S.contacts.map((c,i)=>`<tr><td><input type="text" data-b="contacts.${i}.n" value="${esc(c.n)}"></td><td><input type="text" data-b="contacts.${i}.r" value="${esc(c.r)}" placeholder="${i===0?'e.g. Mum, best friend, DS at Belgravia':''}"></td><td class="n"><input type="checkbox" data-b="contacts.${i}.secure" ${c.secure?'checked':''}></td><td class="n"><input type="checkbox" data-b="contacts.${i}.sour" ${c.sour?'checked':''}></td></tr>`).join('')}
+  </table>`];
+ },
+ signare(){
+  const p=S.sig.p;
+  return ['Signare',`
+  ${rulesBox(`<p>Every practitioner’s magic leaves a signature: a sound, a smell or another sensation. Roll <b>1D100</b> for each of the three columns of <b>Table 10: Signare</b> (rulebook p. 165), or pick the entries you like, and type them in below. Then <b>keep two and discard the third</b>. Or invent your own. If trained by someone with a known signare, add one element of theirs as a third element.${S.opt.kind==='quiet'?' <b>Quiet People</b> add a momentary blast of heat or the smell of the pigsty as a third element.':''}</p>`)}
+  ${!hasMagicPick()&&S.opt.kind!=='quiet'?'<p class="msg warn">Only investigators with the Magic skill have a signare.</p>':''}
+  <div class="row-flex"><button class="btn primary" data-a="sigRollAll">Roll all three</button>${[0,1,2].map(c=>`<button class="btn" data-a="sigRoll" data-x="${c}">Roll ${SIG_COLS[c].toLowerCase()}</button>`).join('')}</div>
+  <div class="grid3" style="margin-top:10px">${[0,1,2].map(c=>`<div class="opt ${S.sig.keep[c]&&(p[c]||S.sig.el[c])?'sel':''}" style="display:block">
+    <label class="row-flex"><input type="checkbox" data-a="sigKeep" data-x="${c}" ${S.sig.keep[c]?'checked':''}> <b>${SIG_COLS[c]}</b> ${p[c]?`<span class="muted small">rolled <b>${p[c]}</b></span>`:''}</label>
+    <input type="text" data-b="sig.el.${c}" value="${esc(S.sig.el[c]||'')}" placeholder="${p[c]?'Entry '+p[c]+' from Table 10':'Type the '+SIG_COLS[c].toLowerCase()}" style="margin-top:6px"></div>`).join('')}</div>
+  <div class="grid2" style="margin-top:6px">${fld('Third element (from your teacher, optional)',txt('sig.third','','e.g. an element of Nightingale’s or Varvara’s signare'))}
+  ${fld('Or write your own signare (overrides the above)',txt('sig.text'))}</div>
+  <p><b>Signare:</b> ${esc(sigText())||'<span class="muted">—</span>'} ${S.sig.keep.filter(Boolean).length!==2&&!S.sig.text?'<span class="msg warn" style="display:inline">Keep exactly two of the three.</span>':''}</p>`];
+ },
+ backstory(){
+  const b=S.back;
+  const radio=q=>`<div style="margin-bottom:12px"><div class="t" style="font-weight:600">${esc(q.q)}</div>${q.o.map(([t,d])=>`<label class="opt ${b[q.k]===t?'sel':''}"><input type="radio" name="${q.k}" data-b="back.${q.k}" value="${esc(t)}" ${b[q.k]===t?'checked':''}><div><div class="t">${esc(t)}</div><div class="d">${esc(d)}</div></div></label>`).join('')}</div>`;
+  const text=q=>fld(q.q,`<input type="text" data-b="back.${q.k}" value="${esc(b[q.k])}">`);
+  return ['Step 5 · Backstory',`
+  ${rulesBox('<p>Everything past and present: family, home, friends, habits, schooling, career. You don’t need it all now — like Peter Grant, much can be revealed in play. Use these prompts as a springboard; skip any you like.</p>')}
+  <h4>Childhood</h4>${BACKQ.child.map(radio).join('')}
+  ${fld('What culture was your investigator brought up in?',`<input type="text" data-b="back.culture" value="${esc(b.culture)}">`)}
+  <h4>The present</h4><div class="grid2">${BACKQ.present.map(text).join('')}</div>
+  <h4>Brush with the supernatural (optional)</h4>
+  ${rulesBox('<p>Decide with the GM whether your investigator has already met the weird. Anyone at the Folly or with the Magic skill almost certainly has.</p>')}
+  <div class="row-flex">${[['yes','Yes'],['no','Not yet'],['unsure','Decide later']].map(([v,l])=>`<label><input type="radio" name="brush" data-b="back.brush" value="${v}" ${b.brush===v?'checked':''}> ${l}</label>`).join('')}</div>
+  ${b.brush==='yes'?`<div class="grid2" style="margin-top:8px">${BACKQ.brush.map(text).join('')}</div>`:''}
+  <h4>Affluence, friends & family</h4>
+  <div class="row-flex"><button class="btn" data-a="open" data-x="affluence">Affluence: ${esc(S.info.affluence)} →</button><button class="btn" data-a="open" data-x="contacts">Friends, family & contacts →</button></div>
+  <h4>Backstory notes</h4>
+  <textarea data-b="back.text" style="min-height:160px" placeholder="Anything else: career history, relationships, bad habits, how you came to the Folly’s attention…">${esc(b.text)}</textarea>
+  <h4>Status</h4>${msgs('back')}`];
+ },
+ equip(){
+  const o=occ();
+  const civ=o&&o.id!=='police';
+  return ['Step 6 · Equipment',`
+  ${rulesBox(`<p>You automatically own whatever is reasonable for your occupation and anything that fits your living standard (<b>${esc(S.info.affluence)}</b>: ${esc(AFFLUENCE.find(a=>a.n===S.info.affluence).maj)}). Extra purchases need the GM’s OK. List only notable or useful items; put weapons in the Weapons box.</p>${civ?'<p><b>Folly consultants</b> swear an oath and carry a consultant’s card: access to crime scenes and interviews, but no police powers.</p>':''}`)}
+  ${o&&o.e?`<p class="small"><b>Suggested for ${esc(occName())}:</b> ${esc(o.e)}</p><div class="row-flex"><button class="btn" data-a="occEquip">Add suggested equipment</button>${o.weapons?'<button class="btn" data-a="occWeapons">Add occupational weapons</button>':''}${civ?'<button class="btn" data-a="addCard">Add Folly consultant’s card</button>':''}</div>`:''}
+  <textarea data-b="equip" style="min-height:260px;margin-top:10px">${esc(S.equip)}</textarea>
+  <div class="row-flex" style="margin-top:8px"><button class="btn" data-a="open" data-x="weapon" data-y="0">Edit weapons →</button></div>`];
+ },
+ cases(){
+  return ['Case Files',`${rulesBox('<p>Notes on the cases your investigator has worked, clues, NPCs, favours owed.</p>')}<textarea data-b="cases" style="min-height:360px">${esc(S.cases)}</textarea>`];
+ },
+ develop(){
+  const D=S.dev, P=D.phase, sk=computeSkills();
+  const fmt=n=>(Math.round(n*2)/2).toString().replace('.5','½').replace(/(^|-)0½/,'$1½');
+  const can=c=>P&&D.pts>=c;
+  let spend='';
+  if(P){
+    const raised=new Set(P.raised);
+    const rows=[...sk].filter(e=>e.cat!=='expert'||e.total>0).sort((a,b)=>(a.cat==='expert')-(b.cat==='expert')||a.key.localeCompare(b.key)).map(e=>{
+      const st=devStep(e.total); const done=raised.has(e.key);
+      const why=done?'raised this phase':!st?'at maximum (99%)':'';
+      return `<tr><td>${esc(e.key)}</td><td class="n"><b>${e.total}</b>/${e.half}</td><td class="n">${why?`<span class="muted small">${why}</span>`:`<button class="btn sm" data-a="devRaise" data-x="${esc(e.key)}" ${can(1)?'':'disabled'}>→ ${st.to}% · 1 DP</button>`}</td>
+        <td class="n">${!why&&e.total<80?`<button class="btn sm" data-a="devHalf" data-x="${esc(e.key)}" ${can(.5)?'':'disabled'}>→ ${Math.min(80,e.total+5)}% · ½ DP</button>`:''}</td></tr>`; }).join('');
+    const knownKeys=new Set(sk.map(e=>e.key));
+    const newOpts=allExpert().filter(x=>x!=='Magic'&&(SPECIALISED.includes(x)||!knownKeys.has(x)||sk.find(e=>e.key===x).total===0)).map(x=>{ const s=newSkillStart(x); return `<option value="${x}">${x} — starts at ${s.v}% (½ ${s.c})</option>`; }).join('');
+    const learnable=hasMagicPick()?SPELLS.map(s=>({s,why:canLearn(s)})):[];
+    const masterable=hasMagicPick()?S.spells.map(s=>({s,why:canMaster(s)})):[];
+    const advs=ADV.filter(a=>!hasAdv(a.id)).map(a=>{ const w=advCheck(a); const c=a.major?10:5; return `<option value="${a.id}" ${w.length?'disabled':''}>${a.n} — ${c} DP${w.length?' (needs '+w.join(', ')+')':''}</option>`; }).join('');
+    spend=`
+    <h4>Raise a skill</h4>
+    <p class="small muted">1 DP = one skill +10% (max 80%), or two skills +5% each (½ DP each). 80%+ goes up 5% (max 90%); 90%+ goes up 1% (max 99%). Each skill can be raised only once per phase.</p>
+    <table class="tbl"><tr><th>Skill</th><th class="n">Now</th><th class="n">Raise</th><th class="n">Half step</th></tr>${rows}</table>
+    <h4>Learn a new skill · 1 DP</h4>
+    <p class="small muted">Starts at half the related characteristic (Table 4, p. 117). For Art/Craft, Science or Languages, name the specialisation. Need a skill that isn’t in the book? <a href="#" data-a="open" data-x="skills" data-y="">Create a custom skill</a> in the Skills section first.</p>
+    <div class="row-flex"><select id="devNew" style="width:auto"><option value="">Choose a skill…</option>${newOpts}</select><input type="text" id="devSpec" list="dl-all" placeholder="Specialisation (if needed)" style="width:220px"><button class="btn primary" data-a="devNew" ${can(1)?'':'disabled'}>Learn</button></div>
+    <datalist id="dl-all">${[...SPEC['Art/Craft'],...SPEC.Science,...SPEC.Languages].map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+    ${hasMagicPick()?`<h4>Spells · 1 DP each, one learned and one mastered per phase</h4>
+    <p class="small muted">To learn a spell you need two spells of the order below it, and you can never know more spells of one order than of any lower order. To master a spell you need two mastered spells of the order below. Each mastered spell gives +1 magic point.</p>
+    <div class="row-flex"><select id="devLearn" style="width:auto" ${P.learned?'disabled':''}><option value="">${P.learned?'Already learned a spell this phase':'Learn a spell…'}</option>${learnable.map(({s,why})=>`<option value="${esc(s.n)}" ${why?'disabled':''}>${esc(s.n)} (order ${s.o})${why?' — '+esc(why):''}</option>`).join('')}</select><button class="btn primary" data-a="devLearn" ${can(1)&&!P.learned?'':'disabled'}>Learn</button></div>
+    <div class="row-flex" style="margin-top:6px"><select id="devMaster" style="width:auto" ${P.mastered?'disabled':''}><option value="">${P.mastered?'Already mastered a spell this phase':'Master a spell…'}</option>${masterable.map(({s,why})=>`<option value="${esc(s.n)}" ${why?'disabled':''}>${esc(s.n)}${why?' — '+esc(why):''}</option>`).join('')}</select><button class="btn primary" data-a="devMaster" ${can(1)&&!P.mastered?'':'disabled'}>Master</button></div>`:''}
+    <h4>Buy an advantage · 5 DP (major 10 DP)</h4>
+    <div class="row-flex"><select id="devAdv" style="width:auto"><option value="">Choose an advantage…</option>${advs}</select><button class="btn primary" data-a="devAdv" ${can(5)?'':'disabled'}>Buy</button></div>
+    <h4>Also this phase</h4>
+    <p class="small">Update your <a href="#" data-a="open" data-x="backstory">backstory</a>, review <a href="#" data-a="open" data-x="affluence">affluence</a> if your finances changed, recover from impairment, and update starting Luck in <a href="#" data-a="open" data-x="supp">Supplemental Info</a>.</p>`;
+  }
+  const closed=new Set(D.log.filter(l=>l.u&&l.u.t==='end').map(phaseOfEnd));
+  const log=D.log.map((l,i)=>{
+    const u=l.u||{};
+    if(u.t==='start'){ const n=l.ph, editing=P&&P.n===n;
+      return `<tr style="background:var(--hot)"><td colspan="3"><b>Development phase ${n}</b>${editing?(P.editing?' <span class="status warn">editing</span>':' <span class="status warn">open</span>'):''}</td>
+      <td class="n">${closed.has(n)&&!P?`<button class="btn sm" data-a="devEditPhase" data-x="${n}" title="Reopen this phase to change what was spent in it">Edit phase</button>`:''}</td></tr>`; }
+    if(u.t==='end') return '';
+    const canDel=!(l.dp>0&&D.pts<l.dp);
+    const ex=u.t==='new'&&S.extras.find(e=>e.dev&&skillKey(e.skill,e.spec)===u.k);
+    const ren=ex&&SPECIALISED.includes(ex.skill);
+    return `<tr><td class="small muted">${l.ph?'':'between phases'}</td><td>${esc(l.t)}</td><td class="n ${l.dp>0?'':'muted'}">${l.dp>0?'+':''}${l.dp?fmt(l.dp):''}</td>
+    <td class="n" style="white-space:nowrap">${ren?`<button class="btn sm" data-a="devRename" data-x="${i}" title="Change the specialisation (e.g. which language)">✎</button> `:''}<button class="btn sm" data-a="devDel" data-x="${i}" ${canDel?'':'disabled title="Those points have already been spent"'} title="Remove this entry and refund its points" aria-label="Remove entry">×</button></td></tr>`; }).join('');
+  return ['Development',`
+  ${rulesBox('<p>Rivers of London uses <b>development points (DP)</b>, not experience points (p. 120). The GM normally awards <b>1 DP per session</b> (more or fewer to suit the group), plus at most 1 DP for training between case files. You spend them in a <b>development phase</b> at the end of a case file or campaign chapter.</p>')}
+  <div class="row-flex" style="justify-content:space-between">
+    <div>${(()=>{ const T=devTotals(); return `<span class="big">${fmt(D.pts)}</span> <span class="muted">banked</span> &nbsp;·&nbsp; <span class="big">${fmt(T.earned)}</span> <span class="muted">earned in total</span> &nbsp;·&nbsp; <span class="big">${fmt(T.spent)}</span> <span class="muted">spent</span>`; })()}</div>
+    <div class="row-flex"><input type="text" id="devWhy" placeholder="Reason (e.g. Session 3)" style="width:190px"><button class="btn primary" data-a="devAward" data-x="1">+1 DP</button><button class="btn" data-a="devAward" data-x="2">+2</button><button class="btn" data-a="devRemove" ${D.pts>=1?'':'disabled'} title="Take away 1 development point">−1 DP</button><button class="btn" data-a="devAward" data-x="1" data-y="Training between cases">+1 training</button></div>
+  </div>
+  <h4>Development phase</h4>
+  ${P?(P.editing?`<div class="row-flex" style="justify-content:space-between"><span><b>Editing phase ${P.n}.</b> <span class="muted">Anything you spend now is filed under phase ${P.n}. Remove mistakes with × in the History below.</span></span><button class="btn primary" data-a="devEnd">Finish editing</button></div>`
+     :`<div class="row-flex" style="justify-content:space-between"><span><b>Phase ${P.n} in progress.</b> <span class="muted">Unspent points carry over.</span></span><button class="btn" data-a="devEnd">End phase</button></div>`)
+     :`<div class="row-flex"><button class="btn primary" data-a="devStart" ${D.pts>0?'':'disabled'}>Start development phase</button><span class="small muted">${D.pts>0?'Start one at the end of a case file to spend your points.':'Award some points first.'}</span></div>`}
+  ${spend}
+  <h4 data-f="history">History</h4>
+  ${log?`<p class="small muted"><b>×</b> removes an entry and refunds its points · <b>✎</b> changes a learned skill’s specialisation · <b>Edit phase</b> reopens a finished phase so you can spend the refund in it.</p>
+  <table class="tbl"><tr><th></th><th>What</th><th class="n">DP</th><th></th></tr>${log}</table><div class="row-flex" style="margin-top:6px"><button class="btn" data-a="devUndo">Undo last action</button></div>`:'<p class="muted small">Nothing yet.</p>'}`];
+ },
+ checklist(){
+  const V=validate();
+  return ['Character Creation Checklist',`
+  ${rulesBox('<p>Six steps: <b>1</b> Occupation · <b>2</b> Characteristics · <b>3</b> Advantages · <b>4</b> Skills · <b>5</b> Backstory · <b>6</b> Equipment. Magic (spells and signare) comes with the Magic skill. Click a step to jump to it.</p>')}
+  ${STEPS.map(([k,l,view])=>{ const w=worst(V[k]); return `<div class="opt" style="display:block"><div class="row-flex" style="justify-content:space-between"><b>${l}</b><span class="row-flex"><span class="status ${w}">${w==='ok'?'done':w==='warn'?'review':'fix'}</span><button class="btn sm" data-a="open" data-x="${view}">Open</button></span></div>${(V[k]||[]).map(m=>`<div class="msg ${m.lvl}">${esc(m.msg)}</div>`).join('')}</div>`; }).join('')}`];
+ },
+ options(){
+  return ['Rules Options',`
+  <h4>Investigator type</h4>
+  ${rulesBox('<p>The book recommends everyone plays a <b>human</b> to begin with. Fae and Quiet People are optional rules for experienced groups (p. 318).</p>')}
+  ${[['human','Human','Standard investigator.'],['fae','Lower fae','Like Zachary Palmer. Luck = POW, refreshing daily; Sense Vestigia 60%; no Newtonian magic, no magic points, no Glamour; a demi-monde affinity powered by Luck.'],['quiet','Quiet Person','As lower fae, with the Earth affinity; usually Tradesperson, Farmer or Lecturer. Bonus die on Observation in quiet, dim places; penalty die in bright or noisy ones.']].map(([v,t,d])=>`<label class="opt ${S.opt.kind===v?'sel':''}"><input type="radio" name="kind" data-a="setKind" data-x="${v}" ${S.opt.kind===v?'checked':''}><div><div class="t">${t}</div><div class="d">${esc(d)}</div></div></label>`).join('')}
+  ${isFae()?`<h4>Demi-monde affinity</h4>${rulesBox('<p>Spend Luck to use your affinity: <b>5 Luck</b> for an everyday manifestation (like a Regular success), <b>20 Luck</b> for a significant one (like a Hard success). Affinities can’t directly inflict damage.'+(S.opt.kind==='quiet'?' Quiet People can emulate Terra (5 Luck), Rock Drill (10), Impello Vibrato (20) and the Coffin Bell (20).':'')+'</p>')}
+   ${AFFINITY.map(a=>`<label class="opt ${S.opt.affinity===a.n?'sel':''}"><input type="radio" name="aff2" data-b="opt.affinity" value="${a.n}" ${S.opt.affinity===a.n?'checked':''}><div><div class="t">${a.n}</div><div class="d">${esc(a.d)}</div><div class="small"><b>5 Luck:</b> ${esc(a.e)} <b>20 Luck:</b> ${esc(a.s)}</div></div></label>`).join('')}
+   ${fld('Or a custom affinity',txt('opt.affinityCustom','','e.g. Locks, Clockwork'))}
+   <div style="margin-top:8px">${fld('Luck refreshes daily at',txt('opt.refresh','','e.g. midnight, sunrise'))}</div>`:''}
+  <h4>Advanced character creation (p. 309)</h4>
+  <label class="opt ${S.opt.free?'sel':''}"><input type="checkbox" data-b="opt.free" ${S.opt.free?'checked':''}><div><div class="t">Free characteristic allocation</div><div class="d">Allocate the 280 points in any amounts, not just blocks of 10 (half values round down).</div></div></label>
+  <label class="opt ${S.opt.wide?'sel':''}"><input type="checkbox" data-b="opt.wide" ${S.opt.wide?'checked':''}><div><div class="t">Extended range 20–90</div><div class="d">For more exceptional characters.</div></div></label>
+  <label class="opt ${S.opt.ageMov?'sel':''}"><input type="checkbox" data-b="opt.ageMov" ${S.opt.ageMov?'checked':''}><div><div class="t">Age and movement</div><div class="d">−1 MOV in your 40s, −2 in your 50s … −5 in your 80s.</div></div></label>
+  <p class="small muted">Experience packages and disadvantages are in the Advantages section.</p>
+  <h4>Appearance</h4>
+  <div class="row-flex"><button class="btn" data-a="theme" data-x="">Match system</button><button class="btn" data-a="theme" data-x="light">Light</button><button class="btn" data-a="theme" data-x="dark">Dark</button></div>`];
+ },
+ roster(){
+  const ids=Object.keys(roster.chars);
+  return ['Characters',`
+  <p class="small muted">Characters are saved automatically in this browser. Export a file to back up or move a character to another device.</p>
+  ${ids.map(id=>{ const c=roster.chars[id]; const o=occById(c.info?.occ); return `<div class="opt ${id===roster.cur?'sel':''}" style="align-items:center"><div style="flex:1"><div class="t">${esc(c.info?.name||'Unnamed investigator')}</div><div class="d">${esc(o?(o.custom?(c.info.occName||'Custom'):o.n):'No occupation')}</div></div>${id===roster.cur?'<span class="tag">current</span>':`<button class="btn sm" data-a="switchChar" data-x="${id}">Open</button>`}<button class="btn sm" data-a="delChar" data-x="${id}">Delete</button></div>`; }).join('')}
+  <div class="row-flex" style="margin-top:10px"><button class="btn primary" data-a="newChar">New investigator</button><button class="btn" data-a="dupChar">Duplicate current</button><button class="btn" data-a="exportChar">Export current (.json)</button><button class="btn" data-a="importChar">Import (.json)</button></div>`];
+ }
+};
+
+/* =====================================================================
+   ACTIONS
+   ===================================================================== */
+function d(n){ return 1+Math.floor(Math.random()*n); }
+function addToken(t){
+  if(pickLimitReached()) return alert('You already have '+pickLimit()+' starting skills. Remove one first.');
+  if(t.s==='Magic'&&!hasAdv('magical')) return alert('Magic requires the Magical advantage.');
+  const p={skill:t.s}; if(SPECIALISED.includes(t.s)) p.specs=[t.sp||'','',''];
+  if(!SPECIALISED.includes(t.s)&&S.picks.some(x=>x.skill===t.s)) return;
+  S.picks.push(p);
+}
+const pickLimitReached=()=>S.picks.length>=pickLimit();
+function devSpend(c){ if(!S.dev.phase){ alert('Start a development phase first.'); return false; } if(S.dev.pts<c){ alert('Not enough development points.'); return false; } S.dev.pts-=c; return true; }
+function devLog(t,dp,u){
+  const P=S.dev.phase; const e={t,dp,u,ph:P?P.n:null,id:++S.dev.seq};
+  if(P&&P.editing){ // file it inside the phase being edited, just before that phase's “ended” line
+    const i=S.dev.log.findIndex(l=>l.u&&l.u.t==='end'&&(l.ph===P.n||(l.u.p&&l.u.p.n===P.n)));
+    if(i>=0){ S.dev.log.splice(i,0,e); return; }
+  }
+  S.dev.log.push(e);
+}
+const phaseOfEnd = l => l.ph ?? (l.u&&l.u.p&&l.u.p.n);
+function devRemoveEntry(i,quiet){
+  const L=S.dev.log, l=L[i]; if(!l) return false; const u=l.u||{}, P=S.dev.phase;
+  if(u.t==='start'||u.t==='end') return false;
+  if(l.dp>0&&S.dev.pts<l.dp){ alert('Those points have already been spent — remove what they were spent on first.'); return false; }
+  const deps=[];
+  L.forEach((x,j)=>{ if(j<=i||!x.u) return;
+    if(u.t==='new'&&x.u.t==='raise'&&x.u.k===u.k) deps.push(j);
+    if(u.t==='learn'&&x.u.t==='master'&&x.u.n===u.n) deps.push(j); });
+  if(deps.length&&!quiet&&!confirm('This will also remove '+deps.length+' later entr'+(deps.length>1?'ies that depend':'y that depends')+' on it:\n\n'+deps.map(j=>'• '+L[j].t).join('\n')+'\n\nContinue?')) return false;
+  deps.reverse().forEach(j=>devRemoveEntry(j,true));
+  const unraise=k=>{ if(P&&P.n===l.ph){ const x=P.raised.lastIndexOf(k); if(x>=0) P.raised.splice(x,1); } };
+  const unadj=(k,a)=>{ S.adj[k]=(+S.adj[k]||0)-a; if(!S.adj[k]) delete S.adj[k]; };
+  if(u.t==='raise'){ unadj(u.k,u.amt); unraise(u.k); }
+  else if(u.t==='new'){ S.extras=S.extras.filter(e=>!(e.dev&&skillKey(e.skill,e.spec)===u.k)); unadj(u.k,u.amt); unraise(u.k); }
+  else if(u.t==='learn'){ S.spells=S.spells.filter(s=>s.n!==u.n); if(P&&P.n===l.ph) P.learned=false; }
+  else if(u.t==='master'){ const s=S.spells.find(x=>x.n===u.n); if(s) s.m=false; if(P&&P.n===l.ph) P.mastered=false; }
+  else if(u.t==='adv'){ S.adv=S.adv.filter(a=>a!==u.id); S.dev.advBought=S.dev.advBought.filter(a=>a!==u.id); }
+  S.dev.pts-=l.dp; L.splice(i,1); return true;
+}
+const ACT={
+ open:(x,y)=>open(x,y!=null&&y!==''?+y:null),
+ setOcc:x=>{ S.info.occ=x; },
+ occEquip:()=>{ const o=occ(); if(o&&o.e&&!S.equip.includes(o.e)) S.equip=(S.equip?S.equip+'\n':'')+o.e; },
+ occWeapons:()=>{ const o=occ(); (o.weapons||[]).forEach(n=>{ if(S.weapons.some(w=>w.n===n)) return; const i=S.weapons.findIndex(w=>!w.n); if(i<0) return; const W=WEAPONS.find(w=>w.n===n); S.weapons[i]={n:W.n,sk:W.sk,dm:W.dm,rg:W.rg,melee:!!W.melee,thrown:!!W.thrown,sig:false,note:W.note||''}; }); },
+ addCard:()=>{ if(!S.equip.includes('Folly consultant')) S.equip=(S.equip?S.equip+'\n':'')+'Folly consultant’s card (non-disclosure agreement signed)'; },
+ preset:x=>{ const v=x.split(',').map(Number); CHARS.forEach((c,i)=>S.ch[c]=v[i]); },
+ chr:(c,y)=>{ const lo=S.opt.wide?20:30, hi=S.opt.wide?90:80; S.ch[c]=Math.min(hi,Math.max(lo,(+S.ch[c]||0)+(+y))); },
+ rollLuck:()=>{ const a=d(10),b=d(10); S.luck.dice=[a,b]; S.luck.start=50+a+b; S.luck.cur=null; },
+ toggleAdv:x=>{ if(hasAdv(x)){ S.adv=S.adv.filter(a=>a!==x); if(x==='magical'){ S.picks=S.picks.filter(p=>p.skill!=='Magic'); } }
+   else{ const a=ADV.find(z=>z.id===x); if(advSlots()+(a.major?2:1)>2){ alert('That would exceed two advantage choices. Remove one first.'); return; } S.adv.push(x);
+     if(x==='rich') S.info.affluence='Rich'; if(x==='wealthy'&&S.info.affluence!=='Rich') S.info.affluence='Wealthy'; } },
+ setPkg:x=>{ S.pkg.id=x; S.pkg.pts={}; if(!x) S.pkg.mode='points'; const P=PKG.find(p=>p.id===x); if(P&&P.occ&&!S.info.occ) S.info.occ=P.occ; },
+ setDis:x=>{ S.dis=x; },
+ pick:x=>{ const i=S.picks.findIndex(p=>p.skill===x); if(i>=0) S.picks.splice(i,1); else if(!pickLimitReached()) S.picks.push({skill:x}); },
+ unpick:x=>{ S.picks.splice(+x,1); },
+ addTok:x=>{ addToken(JSON.parse(x)); },
+ addExpert:()=>{ const v=document.getElementById('addExpert').value; if(!v) return; if(v==='Magic'&&!hasAdv('magical')) return alert('Magic requires the Magical advantage.'); if(pickLimitReached()) return; if(!SPECIALISED.includes(v)&&S.picks.some(p=>p.skill===v)) return; const p={skill:v}; if(SPECIALISED.includes(v)) p.specs=['','','']; S.picks.push(p); },
+ addExtra:()=>{ const v=document.getElementById('addExpert').value; if(!v||v==='Magic') return alert('Choose a skill (not Magic) from the list first.'); let spec=''; if(SPECIALISED.includes(v)){ spec=prompt('Specialisation for '+v+'?')||''; if(!spec) return; } S.extras.push({skill:v,spec}); },
+ addCustom:mode=>{
+   const n=document.getElementById('cusName').value.trim().replace(/\s+/g,' ');
+   if(!n) return alert('Give the custom skill a name.');
+   const clash=[...COMMON,...COMBAT,...EXPERT,...S.customSkills.map(c=>c.n)].find(x=>x.toLowerCase()===n.toLowerCase());
+   if(clash&&!customSkill(clash)) return alert('“'+clash+'” is already a skill in the book — use that instead.');
+   if(!clash) S.customSkills.push({n,c:document.getElementById('cusChar').value,d:document.getElementById('cusDesc').value.trim()});
+   const name=clash||n;
+   if(mode==='pick'){ if(pickLimitReached()) return alert('You already have '+pickLimit()+' starting skills.'); if(!S.picks.some(p=>p.skill===name)) S.picks.push({skill:name}); }
+   if(mode==='extra'&&!S.extras.some(e=>e.skill===name)) S.extras.push({skill:name,spec:''}); },
+ delCustom:i=>{ S.customSkills.splice(+i,1); },
+ rmExtra:x=>{ S.extras=S.extras.filter(e=>skillKey(e.skill,e.spec)!==x); delete S.adj[x]; delete S.pkg.pts[x]; },
+ pickWeapon:(i,val)=>{ if(!val) return; let W;
+   if(val[0]==='w'){ const w=WEAPONS[+val.slice(1)]; W={n:w.n,sk:w.sk,dm:w.dm,rg:w.rg,melee:!!w.melee,thrown:!!w.thrown,note:w.note||''}; }
+   else { const s=spellByName(val.slice(1)); W={n:s.n+' (spell)',sk:s.atk.skill,dm:s.atk.dmg,rg:s.n==='Serra Obscura'?'Touch':'',melee:false,thrown:false,note:s.d}; }
+   S.weapons[+i]={...W,sig:false}; },
+ clearWeapon:i=>{ S.weapons[+i]={n:'',sk:'Fighting',dm:'',rg:'',melee:false,sig:false,note:''}; },
+ toggleSpell:x=>{ const i=S.spells.findIndex(s=>s.n===x); if(i>=0) S.spells.splice(i,1); else S.spells.push({n:x,m:false}); S.spells.sort((a,b)=>spellByName(a.n).o-spellByName(b.n).o); },
+ masterSpell:x=>{ const s=S.spells.find(s=>s.n===x); if(s) s.m=!s.m; },
+ apprenticeStart:()=>{ let w=S.spells.find(s=>s.n==='Werelight'); if(!w){ S.spells.unshift({n:'Werelight',m:true}); } else w.m=true; S.spells.forEach(s=>{ if(s.n!=='Werelight'&&spellByName(s.n).o===1) s.m=false; }); S.spells.sort((a,b)=>spellByName(a.n).o-spellByName(b.n).o); },
+ sigRoll:c=>{ S.sig.p[+c]=d(100); },
+ sigRollAll:()=>{ S.sig.p=[d(100),d(100),d(100)]; },
+ sigKeep:c=>{ S.sig.keep[+c]=!S.sig.keep[+c]; },
+ setKind:x=>{ S.opt.kind=x; if(x!=='human'){ S.adv=S.adv.filter(a=>a!=='magical'); S.picks=S.picks.filter(p=>p.skill!=='Magic'); if(S.dis==='nomagic'||S.dis==='iron') S.dis=''; } if(x==='quiet'&&!S.opt.affinity) S.opt.affinity='Earth'; },
+ devAward:(n,why)=>{ const r=why||document.getElementById('devWhy').value.trim()||'GM award'; S.dev.pts+=+n; devLog(r,+n,{t:'award'}); },
+ devRemove:()=>{ if(S.dev.pts<1) return; S.dev.pts-=1; devLog('Removed 1 DP (correction)',-1,{t:'award'}); },
+ devDelAward:i=>{ devRemoveEntry(+i); },
+ devStart:()=>{ S.dev.phases++; S.dev.phase={n:S.dev.phases,raised:[],learned:false,mastered:false}; devLog('Development phase '+S.dev.phases+' started',0,{t:'start'}); },
+ devEnd:()=>{ const p=S.dev.phase; if(p.editing){ S.dev.phase=null; return; } devLog('Development phase '+p.n+' ended',0,{t:'end',p:{...p}}); S.dev.phase=null; },
+ devEditPhase:n=>{ if(S.dev.phase) return alert('Finish the phase that is open first.'); n=+n;
+   const es=S.dev.log.filter(l=>l.ph===n&&l.u);
+   S.dev.phase={n,editing:true,raised:es.filter(l=>l.u.t==='raise'||l.u.t==='new').map(l=>l.u.k),learned:es.some(l=>l.u.t==='learn'),mastered:es.some(l=>l.u.t==='master')}; },
+ devDel:i=>{ devRemoveEntry(+i); },
+ devRename:i=>{ const l=S.dev.log[+i], old=l.u.k; const ex=S.extras.find(e=>e.dev&&skillKey(e.skill,e.spec)===old); if(!ex) return;
+   const spec=(prompt('Correct the specialisation for '+ex.skill+' (currently “'+ex.spec+'”):',ex.spec)||'').trim(); if(!spec||spec===ex.spec) return;
+   const nk=skillKey(ex.skill,spec); if(skillVal(nk)>0) return alert(nk+' is already on the sheet.');
+   ex.spec=spec;
+   for(const m of [S.adj,S.pkg.pts]) if(old in m){ m[nk]=(+m[nk]||0)+m[old]; delete m[old]; }
+   S.dev.log.forEach(e=>{ if(e.u&&e.u.k===old){ e.u.k=nk; e.t=e.t.split(old).join(nk); } });
+   if(S.dev.phase) S.dev.phase.raised=S.dev.phase.raised.map(k=>k===old?nk:k); },
+ devRaise:k=>{ const v=skillVal(k); const st=devStep(v); if(!st||!devSpend(1)) return; S.adj[k]=(+S.adj[k]||0)+(st.to-v); S.dev.phase.raised.push(k); devLog(k+' '+v+'% → '+st.to+'%',-1,{t:'raise',k,amt:st.to-v}); },
+ devHalf:k=>{ const v=skillVal(k); if(v>=80||!devSpend(.5)) return; const to=Math.min(80,v+5); S.adj[k]=(+S.adj[k]||0)+(to-v); S.dev.phase.raised.push(k); devLog(k+' '+v+'% → '+to+'% (half step)',-.5,{t:'raise',k,amt:to-v}); },
+ devNew:()=>{ const sk=document.getElementById('devNew').value; if(!sk) return alert('Choose a skill first.'); let spec='';
+   if(SPECIALISED.includes(sk)){ spec=document.getElementById('devSpec').value.trim(); if(!spec) return alert('Name the specialisation for '+sk+'.'); }
+   const key=skillKey(sk,spec); if(skillVal(key)>0) return alert(key+' is already known — raise it instead.');
+   if(!devSpend(1)) return; const st=newSkillStart(sk); S.extras.push({skill:sk,spec,dev:true}); S.adj[key]=(+S.adj[key]||0)+st.v; S.dev.phase.raised.push(key);
+   devLog('New skill: '+key+' at '+st.v+'% (half '+st.c+')',-1,{t:'new',k:key,amt:st.v}); },
+ devLearn:()=>{ const n=document.getElementById('devLearn').value; if(!n) return; const sp=spellByName(n); const w=canLearn(sp); if(w) return alert(w); if(!devSpend(1)) return;
+   S.spells.push({n,m:false}); S.spells.sort((a,b)=>spellByName(a.n).o-spellByName(b.n).o); S.dev.phase.learned=true; devLog('Learned spell: '+n,-1,{t:'learn',n}); },
+ devMaster:()=>{ const n=document.getElementById('devMaster').value; if(!n) return; const s=S.spells.find(x=>x.n===n); const w=canMaster(s); if(w) return alert(w); if(!devSpend(1)) return;
+   s.m=true; S.dev.phase.mastered=true; devLog('Mastered spell: '+n+' (+1 magic point)',-1,{t:'master',n}); },
+ devAdv:()=>{ const id=document.getElementById('devAdv').value; if(!id) return; const a=ADV.find(x=>x.id===id); const c=a.major?10:5; if(advCheck(a).length) return; if(!devSpend(c)) return;
+   S.adv.push(id); S.dev.advBought.push(id); devLog('Bought advantage: '+a.n,-c,{t:'adv',id}); },
+ devUndo:()=>{ const L=S.dev.log; if(!L.length) return; // most recently made entry (entries can be filed into older phases)
+   let i=L.length-1; L.forEach((l,j)=>{ if((l.id||0)>(L[i].id||0)) i=j; });
+   const l=L[i], u=l.u||{};
+   if(u.t==='start'){ if(S.dev.phase&&S.dev.phase.n===l.ph&&!S.dev.log.some(x=>x!==l&&x.ph===l.ph)){ S.dev.phase=null; S.dev.phases--; L.splice(i,1); } else alert('Remove the entries in that phase first.'); }
+   else if(u.t==='end'){ if(S.dev.phase) return alert('Finish the phase that is open first.'); S.dev.phase=u.p; L.splice(i,1); }
+   else devRemoveEntry(i); },
+ portrait:()=>document.getElementById('fileIn').click(),
+ portraitClear:()=>{ S.info.portrait=''; },
+ theme:x=>{ if(x) document.documentElement.dataset.theme=x; else delete document.documentElement.dataset.theme; try{ localStorage.setItem('rlcb.theme',x); }catch(e){} },
+ newChar:()=>{ const id=uid(); roster.chars[id]=blank(); roster.cur=id; S=roster.chars[id]; },
+ dupChar:()=>{ const id=uid(); const c=JSON.parse(JSON.stringify(S)); c.info.name=(c.info.name||'Investigator')+' (copy)'; roster.chars[id]=c; roster.cur=id; S=c; },
+ switchChar:x=>{ roster.cur=x; S=roster.chars[x]; },
+ delChar:x=>{ const c=roster.chars[x]; if(!confirm('Delete '+(c.info?.name||'this investigator')+'? This cannot be undone.')) return; delete roster.chars[x]; if(roster.cur===x){ const ids=Object.keys(roster.chars); if(ids.length){ roster.cur=ids[0]; S=roster.chars[ids[0]]; } else { const id=uid(); roster.chars[id]=blank(); roster.cur=id; S=roster.chars[id]; } } },
+ exportChar:()=>{ const blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=(S.info.name||'investigator').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_')+'.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); },
+ importChar:()=>document.getElementById('jsonIn').click()
+};
+
+/* =====================================================================
+   EVENTS
+   ===================================================================== */
+document.addEventListener('click',e=>{
+  const tab=e.target.closest('[data-tab]');
+  if(tab){ document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t===tab)); document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='page-'+tab.dataset.tab)); return; }
+  if(e.target.closest('[data-stop]')) return;
+  if(e.target.closest('[data-close]')){ dlg.close(); return; }
+  const a=e.target.closest('[data-a]');
+  if(a&&dlg.contains(a)){
+    if(a.tagName==='SELECT') return;
+    if(a.tagName==='A') e.preventDefault();
+    const fn=ACT[a.dataset.a]; if(!fn) return;
+    if(a.dataset.a==='open'){ fn(a.dataset.x,a.dataset.y); return; }
+    fn(a.dataset.x,a.dataset.y); refresh(); return;
+  }
+  const o=e.target.closest('[data-open]');
+  if(o&&!dlg.contains(o)){ open(o.dataset.open,o.dataset.i!=null?+o.dataset.i:null,o.dataset.focus); }
+});
+document.addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ')&&e.target.matches('.hot[data-open]')){ e.preventDefault(); e.target.click(); } });
+// damage ticks directly on the sheet
+document.addEventListener('change',e=>{ const k=e.target.dataset?.dmg; if(k){ S.dmg[k]=e.target.checked; softRefresh(); } });
+// bound inputs inside the dialog
+dBody.addEventListener('input',e=>{
+  const el=e.target; if(!el.dataset.b) return;
+  if(el.type==='checkbox'||el.type==='radio'||el.tagName==='SELECT') return;
+  let v=el.value; if(el.dataset.t==='n'){ v=el.value===''?null:+el.value; }
+  setPath(el.dataset.b,v); softRefresh();
+});
+dBody.addEventListener('change',e=>{
+  const el=e.target;
+  if(el.dataset.a==='pickWeapon'){ ACT.pickWeapon(el.dataset.x,el.value); refresh(); return; }
+  if(!el.dataset.b) return;
+  let v;
+  if(el.type==='checkbox') v=el.checked; else if(el.type==='radio'){ if(!el.checked) return; v=el.value; }
+  else { v=el.value; if(el.dataset.t==='n') v=el.value===''?null:+el.value; }
+  setPath(el.dataset.b,v);
+  if(el.type==='checkbox'||el.type==='radio'||el.tagName==='SELECT') refresh();
+  else if(el.dataset.r!==undefined) setTimeout(refresh,0); // let focus move to the next field first; paint() restores it
+  else softRefresh();
+});
+function setPath(path,v){
+  const ks=path.split('.'); let o=S;
+  for(let i=0;i<ks.length-1;i++){ if(o[ks[i]]==null) o[ks[i]]={}; o=o[ks[i]]; }
+  const last=ks.at(-1);
+  if((path.startsWith('pkg.pts.')||path.startsWith('adj.'))&&(v==null||v===0)){ delete o[last]; return; }
+  o[last]=v;
+}
+dlg.addEventListener('close',()=>renderSheet());
+document.getElementById('fileIn').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const img=new Image(); const r=new FileReader();
+  r.onload=()=>{ img.onload=()=>{ const max=420; const sc=Math.min(1,max/Math.max(img.width,img.height)); const c=document.createElement('canvas'); c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc); c.getContext('2d').drawImage(img,0,0,c.width,c.height); S.info.portrait=c.toDataURL('image/jpeg',.85); refresh(); }; img.src=r.result; };
+  r.readAsDataURL(f); e.target.value='';
+});
+document.getElementById('jsonIn').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  f.text().then(t=>{ try{ const c=JSON.parse(t); const id=uid(); roster.chars[id]=merge(blank(),c); repairFromLog(roster.chars[id]); roster.cur=id; S=roster.chars[id]; refresh(); }catch(err){ alert('That file is not a valid character export.'); } });
+  e.target.value='';
+});
+
+/* init */
+try{ const th=localStorage.getItem('rlcb.theme'); if(th) document.documentElement.dataset.theme=th; }catch(e){}
+loadRoster();
+renderSheet();
+</script>
+</body>
+</html>
