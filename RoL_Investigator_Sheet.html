@@ -1298,8 +1298,8 @@ const VIEWS={
   ${w.auto?rulesBox('<p><b>Automatic fire (p. 329):</b> full auto needs more than half a clip and usually empties it. <b>Spray and pray</b>: anyone in a 90° arc may dive for cover (no damage, but they lose their next turn); roll Firearms with a penalty die, targets over 50 m ignored; a Regular success hits 1 target, Hard 3, Critical 6. <b>Concentrated fire</b>: one target, or three within 2 m; the bonus die cancels the auto-fire penalty; on a single target, double the damage roll. Three quick shots or a burst use the Multiple Shots rule (p. 139) instead.</p>'):''}
   <p>On the sheet: <b>${esc(w.n||'—')}</b> · ${d.f}/${d.h} · damage ${esc(d.dmg||'—')} · range ${esc(d.rg||'—')}${w.auto?' · auto':''}</p>
   <div class="row-flex">
-   ${i>0?`<button class="btn" data-a="open" data-x="weapon" data-y="${i-1}">← Previous</button>`:''}
-   ${i<n-1?`<button class="btn" data-a="open" data-x="weapon" data-y="${i+1}">Next →</button>`:'<button class="btn" data-a="addWeapon">+ Add another weapon</button>'}
+   ${i>0?`<button class="btn" data-a="saveNav" data-x="weapon" data-y="${i-1}">← Save and previous</button>`:''}
+   ${i<n-1?`<button class="btn" data-a="saveNav" data-x="weapon" data-y="${i+1}">Save and next →</button>`:'<button class="btn" data-a="addWeapon">+ Add another weapon</button>'}
    <button class="btn" data-a="saveWeaponLib" data-x="${i}" ${w.n?'':'disabled'} title="Save these stats so you can add this weapon to any character">${inLib?'Update in custom weapons list':'Save to custom weapons list'}</button>
    <button class="btn" data-a="delWeapon" data-x="${i}">Delete weapon</button>
   </div>
@@ -1573,6 +1573,7 @@ const ACT={
    else if(val[0]==='l') W=weaponFrom(roster.weaponLib[+val.slice(1)]);
    else { const s=spellByName(val.slice(1)); W=weaponFrom({n:s.n+' (spell)',sk:s.atk.skill,dm:s.atk.dmg,rg:s.n==='Serra Obscura'?'Touch':'',note:s.d}); }
    S.weapons[+i]=W; },
+ saveNav:(view,i)=>{ saveNow(); renderSheet(); open(view,+i); },
  addWeapon:()=>{ S.weapons.push(blankWeapon()); open('weapon',S.weapons.length-1); },
  delWeapon:i=>{ i=+i; const w=S.weapons[i]; if(w.n&&!confirm('Delete '+w.n+' from this character?')) return;
    S.weapons.splice(i,1); while(S.weapons.length<6) S.weapons.push(blankWeapon());
@@ -1649,7 +1650,7 @@ document.addEventListener('click',e=>{
     if(a.tagName==='SELECT') return;
     if(a.tagName==='A') e.preventDefault();
     const fn=ACT[a.dataset.a]; if(!fn) return;
-    if(a.dataset.a==='open'){ fn(a.dataset.x,a.dataset.y); return; }
+    if(a.dataset.a==='open'||a.dataset.a==='saveNav'){ fn(a.dataset.x,a.dataset.y); return; }
     fn(a.dataset.x,a.dataset.y); refresh(); return;
   }
   const o=e.target.closest('[data-open]');
