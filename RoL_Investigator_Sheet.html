@@ -540,13 +540,13 @@ function blank(){
   return {
     v:1,
     info:{name:'',occ:'',occName:'',occReq:'',occRec:'',pob:'',res:'',gender:'',age:'',notes:'',affluence:'Average',portrait:''},
-    opt:{kind:'human',free:false,wide:false,ageMov:false,affinity:'',affinityCustom:'',refresh:''},
+    opt:{kind:'human',free:false,wide:false,ageMov:false,homebrewDis:false,affinity:'',affinityCustom:'',refresh:''},
     ch:{STR:50,CON:50,DEX:50,INT:60,POW:70},
     luck:{start:null,cur:null,dice:null},
     mp:{cur:null},
     adv:[], advField:{},
     pkg:{id:'',mode:'points',pts:{}},
-    dis:'',
+    dis:'', disList:[],
     picks:[], extras:[], adj:{},
     lang:{own:'English',second:'',mode:'none'},
     nurse:{split:false,skill:'',spec:''},
@@ -572,6 +572,7 @@ function merge(base,src){ // deep merge: keeps new default fields AND every key 
   return base;
 }
 // Saves made before the merge fix lost skill improvements; rebuild them from the development history.
+function migrateDis(C){ if(C.dis&&!C.disList.includes(C.dis)) C.disList.push(C.dis); C.dis=''; }
 function repairFromLog(C){
   const sum={};
   for(const l of (C.dev&&C.dev.log)||[]){ const u=l.u||{}; if((u.t==='raise'||u.t==='new')&&u.k) sum[u.k]=(sum[u.k]||0)+(+u.amt||0); }
@@ -587,7 +588,7 @@ function loadRoster(){
   try{ const r=JSON.parse(localStorage.getItem(LS)||'null'); if(r&&r.chars) roster=r; }catch(e){}
   roster.weaponLib=roster.weaponLib||[];
   if(!roster.cur||!roster.chars[roster.cur]){ const id=uid(); roster.cur=id; roster.chars[id]=blank(); }
-  for(const id of Object.keys(roster.chars)){ const c=merge(blank(),roster.chars[id]); repairFromLog(c); roster.chars[id]=c; }
+  for(const id of Object.keys(roster.chars)){ const c=merge(blank(),roster.chars[id]); repairFromLog(c); migrateDis(c); roster.chars[id]=c; }
   S=roster.chars[roster.cur];
 }
 let saveT=null;
@@ -599,6 +600,7 @@ function save(){ roster.chars[roster.cur]=S; clearTimeout(saveT); saveT=setTimeo
    ===================================================================== */
 const isFae = () => S.opt.kind!=='human';
 const hasAdv = id => S.adv.includes(id);
+const hasDis = id => S.disList.includes(id);
 const occ = () => occById(S.info.occ);
 function occReqRec(){
   const o=occ(); if(!o) return {r:[],c:[]};
@@ -662,14 +664,14 @@ function half(v){ return Math.floor((+v||0)/2); }
 function mov(){
   let m=8; const parts=['Base 8'];
   if(hasAdv('speedy')){ m=9; parts.push('Speedy → 9'); }
-  if(S.dis==='slow'){ m=5; parts.push('Slow-Footed → 5'); }
+  if(hasDis('slow')){ m=5; parts.push('Slow-Footed → 5'); }
   if(S.opt.ageMov){ const a=+S.info.age||0; const d=a>=80?5:a>=70?4:a>=60?3:a>=50?2:a>=40?1:0; if(d){ m-=d; parts.push('Age '+a+' → −'+d); } }
   return {v:Math.max(1,m),why:parts.join(', ')};
 }
 function masteredCount(){ return S.spells.filter(s=>s.m).length; }
 function mpStart(){ if(isFae()) return null; return Math.floor((+S.ch.POW||0)/5)+masteredCount(); }
 function luckStart(){ return isFae()?(+S.ch.POW||0):S.luck.start; }
-function spellCost(sp){ return sp.o+(S.dis==='exhausting'?1:0); }
+function spellCost(sp){ return sp.o+(hasDis('exhausting')?1:0); }
 function prereqOK(sp,known){ // known: map name->mastered
   return sp.pre.every(g=>g.some(req=>{ const m=req.endsWith('*'); const n=m?req.slice(0,-1):req; return n in known && (!m||known[n]); }));
 }
@@ -716,10 +718,10 @@ function advCheck(a){
   for(const c of CHARS) if(a.pre[c] && (+S.ch[c]||0)<a.pre[c]) why.push(c+' '+a.pre[c]+'+');
   if(a.pre.skill && skillVal(a.pre.skill[0])<a.pre.skill[1]) why.push(a.pre.skill[0]+' '+a.pre.skill[1]+'%+');
   if(a.id==='magical'&&isFae()) why.push('fae cannot use Newtonian magic');
-  if(a.id==='magical'&&S.dis==='nomagic') why.push('conflicts with Not a Magical Bone');
-  if(a.id==='steadfast'&&S.dis==='damaged') why.push('conflicts with Damaged');
-  if(a.id==='tough'&&S.dis==='frail') why.push('conflicts with Frail');
-  if(a.id==='speedy'&&S.dis==='slow') why.push('conflicts with Slow-Footed');
+  if(a.id==='magical'&&hasDis('nomagic')) why.push('conflicts with Not a Magical Bone');
+  if(a.id==='steadfast'&&hasDis('damaged')) why.push('conflicts with Damaged');
+  if(a.id==='tough'&&hasDis('frail')) why.push('conflicts with Frail');
+  if(a.id==='speedy'&&hasDis('slow')) why.push('conflicts with Slow-Footed');
   return why;
 }
 function disCheck(d){
@@ -760,11 +762,13 @@ function validate(){
   S.adv.forEach(id=>{ const a=ADV.find(x=>x.id===id); const w=advCheck(a); if(w.length) add('adv','err',a.n+' needs '+w.join(', ')+'.'); if(a.field&&!S.advField[id]) add('adv','warn',a.n+': specify '+a.field.toLowerCase()+(id==='connected'?' (can be decided later in play)':'')+'.'); });
   if(S.pkg.id){
     const P=PKG.find(p=>p.id===S.pkg.id);
-    if(!S.dis) add('adv','err','The '+P.n+' package requires one disadvantage.');
+    if(!S.disList.length) add('adv','err','The '+P.n+' experience package requires a disadvantage. Choose one in Advantages.');
+    else if(!S.opt.homebrewDis&&S.disList.length>1) add('adv','err','Book rules allow one disadvantage per package (turn on the homebrew option in Rules options for more).');
     if(P.occ&&S.info.occ!==P.occ){ add('adv',P.soft?'warn':'err','The '+P.n+' package uses the '+occById(P.occ).n+' occupation'+(P.soft?' (others with GM consent).':'.')); }
     if(P.spell&&!hasAdv('magical')) add('adv','err','The Spellcaster package requires the Magical advantage.');
   }
-  if(S.dis){ const d=DIS.find(x=>x.id===S.dis); const w=disCheck(d); if(w.length) add('adv','err',d.n+': '+w.join(', ')+'.'); if(!S.pkg.id) add('adv','warn','Disadvantages are normally only taken with an experience package.'); }
+  S.disList.forEach(id=>{ const d=DIS.find(x=>x.id===id); if(!d) return; const w=disCheck(d); if(w.length) add('adv','err',d.n+': '+w.join(', ')+'.'); });
+  if(S.disList.length&&!S.pkg.id&&!S.opt.homebrewDis) add('adv','warn','Disadvantages are normally only taken with an experience package (or turn on the homebrew option in Rules options).');
   // affluence
   const af=S.info.affluence;
   if(af==='Wealthy'&&!hasAdv('wealthy')) add('back','err','Wealthy affluence requires the Wealthy advantage.');
@@ -846,7 +850,8 @@ function renderSheet(){
   const advNames=S.adv.map(id=>{const a=ADV.find(x=>x.id===id); let t=a.n; if(S.advField[id]) t+=' — '+S.advField[id]; return {t,major:a.major};});
   const advRows=[...advNames.map(a=>`<div class="fl"><span class="v">${esc(a.t)}${a.major?'<span class="tag">major</span>':''}</span></div>`)];
   if(S.pkg.id) advRows.push(`<div class="fl"><span class="v">${esc(PKG.find(p=>p.id===S.pkg.id).n)} experience package<span class="tag">package</span></span></div>`);
-  if(S.dis) advRows.push(`<div class="fl"><span class="v">${esc(DIS.find(d=>d.id===S.dis).n)}<span class="tag dis">disadvantage</span></span></div>`);
+  S.disList.forEach(id=>{ const d=DIS.find(x=>x.id===id); if(d) advRows.push(`<div class="fl"><span class="v">${esc(d.n)}<span class="tag dis">disadvantage</span></span></div>`); });
+  if(S.pkg.id&&!S.disList.length) advRows.unshift(`<div class="fl" style="color:var(--err)"><span class="v"><b>⚠ Your experience package needs a disadvantage</b> — click here to choose one.</span></div>`);
   if(isFae()){ const af=S.opt.affinityCustom||S.opt.affinity; advRows.push(`<div class="fl"><span class="v">${S.opt.kind==='quiet'?'Quiet Person':'Lower fae'}${af?' — '+esc(af)+' affinity':''}<span class="tag">demi-monde</span></span></div>`); }
   while(advRows.length<6) advRows.push('<div class="fl"><span class="v"></span></div>');
 
@@ -923,7 +928,7 @@ function renderSheet(){
     <div class="box hot dmg" data-open="damage" tabindex="0">
       <h2 class="band">Damage <span class="ico">✺</span></h2>
       <div class="bd">
-        ${[['hurt','Hurt'],['bloodied','Bloodied'],['down','Down'],['impaired','Impaired']].map(([k,l])=>`<label class="tick ${k==='hurt'&&S.dis==='frail'?'off':''}" data-stop><input type="checkbox" data-dmg="${k}" ${S.dmg[k]?'checked':''} ${k==='hurt'&&S.dis==='frail'?'disabled':''}> ${l}</label>`).join('')}
+        ${[['hurt','Hurt'],['bloodied','Bloodied'],['down','Down'],['impaired','Impaired']].map(([k,l])=>`<label class="tick ${k==='hurt'&&hasDis('frail')?'off':''}" data-stop><input type="checkbox" data-dmg="${k}" ${S.dmg[k]?'checked':''} ${k==='hurt'&&hasDis('frail')?'disabled':''}> ${l}</label>`).join('')}
       </div>
     </div>
   </div>
@@ -1099,7 +1104,7 @@ const VIEWS={
    <label class="fld" style="flex-direction:row;align-items:center;gap:6px"><span>Starting</span><input type="number" data-b="luck.start" data-t="n" data-r value="${esc(S.luck.start??'')}"></label></div>`}
   <div class="row-flex" style="margin-top:8px"><label class="fld" style="flex-direction:row;align-items:center;gap:6px"><span>Current Luck</span><input type="number" data-b="luck.cur" data-t="n" value="${esc(S.luck.cur??'')}" placeholder="${esc(L??'')}"></label></div>
   <h4>Magic points</h4>
-  ${isFae()?'<p class="muted">Fae investigators have no magic points; they spend Luck on their affinity instead.</p>':rulesBox(`<p>Starting magic points = POW ÷ 5 (<b>${Math.floor(S.ch.POW/5)}</b>) + 1 per mastered spell (<b>${masteredCount()}</b>) = <b>${mp}</b>. Spell cost = its order${S.dis==='exhausting'?' +1 (Magic is Exhausting)':''}.</p>`)+`
+  ${isFae()?'<p class="muted">Fae investigators have no magic points; they spend Luck on their affinity instead.</p>':rulesBox(`<p>Starting magic points = POW ÷ 5 (<b>${Math.floor(S.ch.POW/5)}</b>) + 1 per mastered spell (<b>${masteredCount()}</b>) = <b>${mp}</b>. Spell cost = its order${hasDis('exhausting')?' +1 (Magic is Exhausting)':''}.</p>`)+`
   <label class="fld" style="flex-direction:row;align-items:center;gap:6px"><span>Current magic points</span><input type="number" data-b="mp.cur" data-t="n" value="${esc(S.mp.cur??'')}" placeholder="${esc(mp??'')}"></label>`}`];
  },
  adv(){
@@ -1110,7 +1115,8 @@ const VIEWS={
       ${why.length?`<div class="why">Not met: ${esc(why.join(', '))}</div>`:''}
       ${on&&a.field?`<div style="margin-top:6px">${fld(a.field,`<input type="text" data-b="advField.${a.id}" value="${esc(S.advField[a.id]||'')}">`)}</div>`:''}</div></label>`; }).join('');
   const pk=S.pkg.id;
-  const disHtml=DIS.map(d=>{ const why=disCheck(d); return `<label class="opt ${S.dis===d.id?'sel':''} ${why.length&&S.dis!==d.id?'no':''}"><input type="radio" name="dis" data-a="setDis" data-x="${d.id}" ${S.dis===d.id?'checked':''}><div><div class="t">${d.n}</div><div class="d">${esc(d.d)}</div>${why.length?`<div class="why">${esc(why.join(', '))}</div>`:''}</div></label>`; }).join('');
+  const multi=S.opt.homebrewDis;
+  const disHtml=DIS.map(d=>{ const on=hasDis(d.id); const why=disCheck(d); return `<label class="opt ${on?'sel':''} ${why.length&&!on?'no':''}"><input type="${multi?'checkbox':'radio'}" name="dis" data-a="${multi?'toggleDis':'setDis'}" data-x="${d.id}" ${on?'checked':''}><div><div class="t">${d.n}</div><div class="d">${esc(d.d)}</div>${why.length?`<div class="why">${esc(why.join(', '))}</div>`:''}</div></label>`; }).join('');
   return ['Step 3 · Advantages',`
   ${rulesBox('<p>Choose up to <b>two</b> advantages. <b>Major</b> advantages (Magical, Rich) count as both. You must meet each prerequisite — skill prerequisites use your current skill values, so pick skills first if needed (Signature Weapon/Firearm, The Knowledge).</p>')}
   <p><b>${slots}</b> of 2 choices used.</p>
@@ -1120,8 +1126,9 @@ const VIEWS={
   <label class="opt ${!pk?'sel':''}"><input type="radio" name="pkg" data-a="setPkg" data-x="" ${!pk?'checked':''}><div><div class="t">No package</div><div class="d">Standard character creation.</div></div></label>
   ${PKG.map(p=>`<label class="opt ${pk===p.id?'sel':''}"><input type="radio" name="pkg" data-a="setPkg" data-x="${p.id}" ${pk===p.id?'checked':''}><div style="flex:1"><div class="t">${p.n}</div><div class="d">${esc(p.d)}${p.occ?' Occupation: '+esc(occById(p.occ).n)+'.':''}</div>
    ${pk==='experienced'&&p.id==='experienced'?`<div class="row-flex small" style="margin-top:6px"><label><input type="radio" name="pmode" data-b="pkg.mode" value="points" ${S.pkg.mode==='points'?'checked':''}> 60 points on any skills</label><label><input type="radio" name="pmode" data-b="pkg.mode" value="newskill" ${S.pkg.mode==='newskill'?'checked':''}> one extra new skill at 60% (7 picks)</label></div>`:''}</div></label>`).join('')}
-  <h4>Disadvantage ${pk?'(required — choose one)':'(only with a package)'}</h4>
-  ${pk||S.dis?`<label class="opt ${!S.dis?'sel':''}"><input type="radio" name="dis" data-a="setDis" data-x="" ${!S.dis?'checked':''}><div><div class="t">None</div></div></label>${disHtml}`:'<p class="muted small">Choose an experience package to unlock disadvantages.</p>'}
+  <h4>Disadvantages ${multi?'<span class="tag">homebrew: pick any</span>':(pk?'(required: choose one)':'(only with a package)')}</h4>
+  ${pk&&!S.disList.length?'<p class="msg err">Your experience package needs a disadvantage.</p>':''}
+  ${multi?disHtml:(pk||S.disList.length?`<label class="opt ${!S.disList.length?'sel':''}"><input type="radio" name="dis" data-a="setDis" data-x="" ${!S.disList.length?'checked':''}><div><div class="t">None</div></div></label>${disHtml}`:'<p class="muted small">Choose an experience package to unlock disadvantages, or turn on the homebrew option in Rules options to pick them freely.</p>')}
   <h4>Status</h4>${msgs('adv')}`];
  },
  skills(){
@@ -1257,8 +1264,8 @@ const VIEWS={
  },
  damage(){
   return ['Damage',`
-  ${rulesBox('<ul><li><b>Hurt</b> — 1 damage: minor wounds.</li><li><b>Bloodied</b> — 2 damage: seriously injured.</li><li><b>Down</b> — 3 damage: out of the fight.</li><li><b>Impaired</b> — from mental trauma or injury; see Impairment (p. 118).</li><li>4 damage is a Mortal Wound; 5 is a fatal blow. The GM will tell you what to tick.</li></ul>'+(S.dis==='frail'?'<p><b>Frail:</b> you have no Hurt level — 1 damage makes you Bloodied.</p>':'')+(hasAdv('tough')?'<p><b>Natural Toughness:</b> unarmed and blunt attacks do 1 less damage to you.</p>':'')+(hasAdv('steadfast')?'<p><b>Steadfast:</b> no impairment from stress or the supernatural.</p>':''))}
-  ${[['hurt','Hurt'],['bloodied','Bloodied'],['down','Down'],['impaired','Impaired']].map(([k,l])=>`<label class="opt ${S.dmg[k]?'sel':''}"><input type="checkbox" data-b="dmg.${k}" ${S.dmg[k]?'checked':''} ${k==='hurt'&&S.dis==='frail'?'disabled':''}><div class="t">${l}</div></label>`).join('')}`];
+  ${rulesBox('<ul><li><b>Hurt</b> — 1 damage: minor wounds.</li><li><b>Bloodied</b> — 2 damage: seriously injured.</li><li><b>Down</b> — 3 damage: out of the fight.</li><li><b>Impaired</b> — from mental trauma or injury; see Impairment (p. 118).</li><li>4 damage is a Mortal Wound; 5 is a fatal blow. The GM will tell you what to tick.</li></ul>'+(hasDis('frail')?'<p><b>Frail:</b> you have no Hurt level — 1 damage makes you Bloodied.</p>':'')+(hasAdv('tough')?'<p><b>Natural Toughness:</b> unarmed and blunt attacks do 1 less damage to you.</p>':'')+(hasAdv('steadfast')?'<p><b>Steadfast:</b> no impairment from stress or the supernatural.</p>':''))}
+  ${[['hurt','Hurt'],['bloodied','Bloodied'],['down','Down'],['impaired','Impaired']].map(([k,l])=>`<label class="opt ${S.dmg[k]?'sel':''}"><input type="checkbox" data-b="dmg.${k}" ${S.dmg[k]?'checked':''} ${k==='hurt'&&hasDis('frail')?'disabled':''}><div class="t">${l}</div></label>`).join('')}`];
  },
  contacts(){
   const o=occ();
@@ -1394,6 +1401,8 @@ const VIEWS={
   <label class="opt ${S.opt.wide?'sel':''}"><input type="checkbox" data-b="opt.wide" ${S.opt.wide?'checked':''}><div><div class="t">Extended range 20–90</div><div class="d">For more exceptional characters.</div></div></label>
   <label class="opt ${S.opt.ageMov?'sel':''}"><input type="checkbox" data-b="opt.ageMov" ${S.opt.ageMov?'checked':''}><div><div class="t">Age and movement</div><div class="d">−1 MOV in your 40s, −2 in your 50s … −5 in your 80s.</div></div></label>
   <p class="small muted">Experience packages and disadvantages are in the Advantages section.</p>
+  <h4>Homebrew rules <span class="tag">house rules, not from the book</span></h4>
+  <label class="opt ${S.opt.homebrewDis?'sel':''}"><input type="checkbox" data-b="opt.homebrewDis" ${S.opt.homebrewDis?'checked':''}><div><div class="t">Disadvantages without a package</div><div class="d">Pick any number of disadvantages, with or without an experience package. If you do take an experience package, it still needs at least one disadvantage, and you’ll be alerted if it has none.</div></div></label>
   <h4>Appearance</h4>
   <div class="row-flex"><button class="btn" data-a="theme" data-x="">Match system</button><button class="btn" data-a="theme" data-x="light">Light</button><button class="btn" data-a="theme" data-x="dark">Dark</button></div>`];
  },
@@ -1460,7 +1469,8 @@ const ACT={
    else{ const a=ADV.find(z=>z.id===x); if(advSlots()+(a.major?2:1)>2){ alert('That would exceed two advantage choices. Remove one first.'); return; } S.adv.push(x);
      if(x==='rich') S.info.affluence='Rich'; if(x==='wealthy'&&S.info.affluence!=='Rich') S.info.affluence='Wealthy'; } },
  setPkg:x=>{ S.pkg.id=x; S.pkg.pts={}; if(!x) S.pkg.mode='points'; const P=PKG.find(p=>p.id===x); if(P&&P.occ&&!S.info.occ) S.info.occ=P.occ; },
- setDis:x=>{ S.dis=x; },
+ setDis:x=>{ S.disList=x?[x]:[]; },
+ toggleDis:x=>{ S.disList=hasDis(x)?S.disList.filter(d=>d!==x):[...S.disList,x]; },
  pick:x=>{ const i=S.picks.findIndex(p=>p.skill===x); if(i>=0) S.picks.splice(i,1); else if(!pickLimitReached()) S.picks.push({skill:x}); },
  unpick:x=>{ S.picks.splice(+x,1); },
  addTok:x=>{ addToken(JSON.parse(x)); },
@@ -1494,7 +1504,7 @@ const ACT={
  sigRoll:c=>{ S.sig.p[+c]=d(100); },
  sigRollAll:()=>{ S.sig.p=[d(100),d(100),d(100)]; },
  sigKeep:c=>{ S.sig.keep[+c]=!S.sig.keep[+c]; },
- setKind:x=>{ S.opt.kind=x; if(x!=='human'){ S.adv=S.adv.filter(a=>a!=='magical'); S.picks=S.picks.filter(p=>p.skill!=='Magic'); if(S.dis==='nomagic'||S.dis==='iron') S.dis=''; } if(x==='quiet'&&!S.opt.affinity) S.opt.affinity='Earth'; },
+ setKind:x=>{ S.opt.kind=x; if(x!=='human'){ S.adv=S.adv.filter(a=>a!=='magical'); S.picks=S.picks.filter(p=>p.skill!=='Magic'); S.disList=S.disList.filter(d=>d!=='nomagic'&&d!=='iron'); } if(x==='quiet'&&!S.opt.affinity) S.opt.affinity='Earth'; },
  devAward:(n,why)=>{ const r=why||document.getElementById('devWhy').value.trim()||'GM award'; S.dev.pts+=+n; devLog(r,+n,{t:'award'}); },
  devRemove:()=>{ if(S.dev.pts<1) return; S.dev.pts-=1; devLog('Removed 1 DP (correction)',-1,{t:'award'}); },
  devDelAward:i=>{ devRemoveEntry(+i); },
@@ -1602,7 +1612,7 @@ document.getElementById('fileIn').addEventListener('change',e=>{
 });
 document.getElementById('jsonIn').addEventListener('change',e=>{
   const f=e.target.files[0]; if(!f) return;
-  f.text().then(t=>{ try{ const c=JSON.parse(t); const id=uid(); roster.chars[id]=merge(blank(),c); repairFromLog(roster.chars[id]); roster.cur=id; S=roster.chars[id]; refresh(); }catch(err){ alert('That file is not a valid character export.'); } });
+  f.text().then(t=>{ try{ const c=JSON.parse(t); const id=uid(); roster.chars[id]=merge(blank(),c); repairFromLog(roster.chars[id]); migrateDis(roster.chars[id]); roster.cur=id; S=roster.chars[id]; refresh(); }catch(err){ alert('That file is not a valid character export.'); } });
   e.target.value='';
 });
 
