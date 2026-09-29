@@ -9,4 +9,4 @@
      bug fix up         -> just that number
    Bump with ~/.claude/tools/bump_version.py (product | feature | bugfix | set X.YY.ZZ).
    Tag each release v<version>. */
-var LATEST_APP_VERSION = "0.06.01";
+var LATEST_APP_VERSION = "0.07.00";
