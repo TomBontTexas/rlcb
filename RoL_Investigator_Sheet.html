@@ -406,7 +406,7 @@ const ADV = [
  {id:'connected',n:'Connected',pre:{},d:'Can pull strings with powerful people (official, rich individual, criminal organisation). Favours without a Social roll — but they will want favours back.',field:'Connected to'},
  {id:'dmgbonus',n:'Damage Bonus',pre:{STR:60},d:'Melee attacks inflict +1 damage (not ranged, firearms or spells).'},
  {id:'fast',n:'Fast Reactions',pre:{DEX:60},d:'Two “fight back” responses per round; enemies gain no benefit for outnumbering you.'},
- {id:'magical',n:'Magical',major:1,pre:{INT:60,POW:60},d:'Aptitude to cast spells. Needed to take the Magic skill (which also gives Sense Vestigia 60% free). Counts as both choices.'},
+ {id:'magical',n:'Magical',major:1,pre:{INT:60,POW:60},d:'Aptitude to cast spells. Needed to take the Magic skill (which also gives Sense Vestigia 60% free). Counts as both choices. Homebrew: also gives Language (Latin) 60% free.'},
  {id:'tough',n:'Natural Toughness',pre:{STR:60,CON:60},d:'Unarmed and blunt melee attacks against you inflict 1 less damage (not blades, bullets or spells).'},
  {id:'rich',n:'Rich',major:1,pre:{},d:'Rich affluence rating. Required for Dilettante (and famous celebrities). Counts as both choices.'},
  {id:'scary',n:'Scary',pre:{},d:'Bonus die on Social rolls to intimidate.'},
@@ -659,6 +659,8 @@ function computeSkills(){
     put(p.skill,'expert',60,p.skill,'pick');
   }
   if(isFae()) put('Sense Vestigia','common',60,'Sense Vestigia','fae');
+  // Homebrew: the Magical advantage comes with Latin at 60% (doesn't use a starting pick)
+  if(hasAdv('magical')) put(skillKey('Languages','Latin'),'expert',60,'Languages','magical');
   for(const x of S.extras){ put(skillKey(x.skill,x.spec),'expert',0,x.skill,x.dev?'dev':'extra'); } // 'dev' = bought with DP: removed only via Development history
   // Linguist (homebrew) applies live to every language bought with DP, whenever it was learned:
   // the stored start value is corrected to full INT (with Linguist) or half INT (without).
@@ -815,6 +817,7 @@ function validate(){
   if(hasAdv('magical')&&!hasMagicPick()&&!isFae()) add('skills','warn','You took Magical — you should choose Magic as a starting skill.');
   S.picks.forEach(p=>{ if(SPECIALISED.includes(p.skill)&&!(S.info.occ==='nurse'&&p.skill==='Medicine')){ const sp=p.specs||[]; if(!sp[0]) add('skills','err',p.skill+': choose the 60% specialisation.'); else if(!sp[1]||!sp[2]) add('skills','warn',p.skill+': choose two more specialisations at 30%.'); } });
   if(S.info.occ==='nurse'&&S.nurse.split&&!S.nurse.skill) add('skills','err','Nurse: choose the second expert skill at 40%.');
+  if(hasAdv('magical')&&S.picks.some(p=>p.skill==='Languages'&&(p.specs||[]).some(x=>(x||'').trim().toLowerCase()==='latin'))) add('skills','warn','Latin is already free at 60% with the Magical advantage (homebrew): choose a different language in your Languages pick.');
   if(!S.lang.own) add('skills','warn','Enter your own (mother-tongue) language.');
   if(S.pkg.id&&S.pkg.mode==='points'){
     const sk=computeSkills(); const spent=sk.reduce((a,e)=>a+e.pkg,0);
@@ -1224,14 +1227,14 @@ const VIEWS={
   const addable=allExpert().filter(x=>!(pickSet.has(x)&&!SPECIALISED.includes(x)));
   const usedKeys=new Set(sk.map(e=>e.key));
   const customList=S.customSkills.map((c,i)=>`<div class="opt" style="align-items:center"><div style="flex:1"><div class="t">${esc(c.n)} <span class="tag">custom</span></div><div class="d small">${esc(c.d||'No description')} · learned in play at ½ ${esc(c.c)}</div></div>${usedKeys.has(c.n)?'<span class="tag">on this character</span>':`<button class="btn sm" data-a="delCustom" data-x="${i}">Delete</button>`}</div>`).join('');
-  const expertTable=sk.filter(e=>e.cat==='expert').sort((a,b)=>a.key.localeCompare(b.key)).map(e=>`<tr class="${e.picked?'picked':''}"><td>${esc(e.key)} <span class="muted small">${e.src.map(s=>({own:'own language',bilingual:'bilingual',pick:'starting skill',pick30:'secondary',extra:'added',dev:'learned in play',linguist:'Linguist (full INT)'}[s]||'')).filter(Boolean).join(', ')}</span></td><td class="n">${e.base}</td>${pts?`<td class="n">${pkgEligible(e.key)?`<input type="number" min="0" max="60" step="5" data-b="pkg.pts.${e.key}" data-t="n" data-r value="${e.pkg||''}">`:'<span class="muted">—</span>'}</td>`:''}<td class="n"><input type="number" data-b="adj.${e.key}" data-t="n" data-r value="${e.adjv||''}"></td><td class="n"><b>${e.total}</b>/${e.half}</td><td>${e.src.includes('extra')?`<button class="btn icon-btn" aria-label="Remove skill" title="Remove this skill" data-a="rmExtra" data-x="${esc(e.key)}">×</button>`:''}</td></tr>`).join('');
+  const expertTable=sk.filter(e=>e.cat==='expert').sort((a,b)=>a.key.localeCompare(b.key)).map(e=>`<tr class="${e.picked?'picked':''}"><td>${esc(e.key)} <span class="muted small">${e.src.map(s=>({own:'own language',bilingual:'bilingual',pick:'starting skill',pick30:'secondary',extra:'added',dev:'learned in play',magical:'free with Magical (homebrew)',linguist:'Linguist (full INT)'}[s]||'')).filter(Boolean).join(', ')}</span></td><td class="n">${e.base}</td>${pts?`<td class="n">${pkgEligible(e.key)?`<input type="number" min="0" max="60" step="5" data-b="pkg.pts.${e.key}" data-t="n" data-r value="${e.pkg||''}">`:'<span class="muted">—</span>'}</td>`:''}<td class="n"><input type="number" data-b="adj.${e.key}" data-t="n" data-r value="${e.adjv||''}"></td><td class="n"><b>${e.total}</b>/${e.half}</td><td>${e.src.includes('extra')?`<button class="btn icon-btn" aria-label="Remove skill" title="Remove this skill" data-a="rmExtra" data-x="${esc(e.key)}">×</button>`:''}</td></tr>`).join('');
   const datalists=SPECIALISED.map(s=>`<datalist id="dl-${s.replace(/\W/g,'')}">${SPEC[s].map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`).join('');
   return ['Step 4 · Skills',`${datalists}
   ${rulesBox(`<ul>
    <li>Choose <b>${lim} starting skills</b> and boost each to <b>60%</b>. Include all <b>required</b> skills, then any recommended or other skills.</li>
    <li>Unchosen common and combat skills stay at <b>30%</b>; unchosen expert skills are <b>0%</b> (you can’t use them).</li>
    <li><b>Art/Craft, Science and Languages</b>: at character creation, one starting pick = one specialisation at 60% plus two others at 30%. (Bought later with development points, each specialisation is a separate new skill.)</li>
-   <li><b>Magic</b> needs the Magical advantage and gives <b>Sense Vestigia 60%</b> free.</li>
+   <li><b>Magic</b> needs the Magical advantage and gives <b>Sense Vestigia 60%</b> free. <i>Homebrew:</i> the Magical advantage also gives <b>Language (Latin) 60%</b> free.</li>
    <li>Your <b>own language</b> is free at INT or 60% (whichever is higher). A bilingual upbringing gives a second language free (same value, or half INT/30% if less fluent).</li>
    ${P?`<li><b>${esc(P.n)} package:</b> ${pts?`spend <b>60 points</b> on ${P.any?'any':'required/recommended'} skills (the “Pkg” column), max 80% each.`:'one extra starting skill at 60% (7 picks).'}${P.spell?' Magic starts at 70%.':''}</li>`:''}
    <li>To improve skills after play, use <a href="#" data-a="open" data-x="develop">Development</a>. The “Adj” column is only for manual GM adjustments.</li></ul>`)}
@@ -1263,7 +1266,7 @@ const VIEWS={
    ${fld('Bilingual upbringing?',`<select data-b="lang.mode"><option value="none" ${S.lang.mode==='none'?'selected':''}>No</option><option value="equal" ${S.lang.mode==='equal'?'selected':''}>Yes — equally fluent</option><option value="less" ${S.lang.mode==='less'?'selected':''}>Yes — less fluent in second</option></select>`)}
    ${S.lang.mode!=='none'?fld('Second language',`<input type="text" list="dl-Languages" data-b="lang.second" data-r value="${esc(S.lang.second)}">`):''}
   </div>
-  <p class="small muted">Newtonian practitioners don’t need Latin to cast spells, though Nightingale teaches it. More languages mean taking the Languages skill.</p>
+  <p class="small muted"><i>Homebrew:</i> characters with the Magical advantage get Language (Latin) 60% free. More languages mean taking the Languages skill.</p>
   <h4>All expert skills</h4>
   <table class="tbl"><tr><th>Skill</th><th class="n">Base</th>${pts?'<th class="n">Pkg</th>':''}<th class="n">Adj</th><th class="n">Full/Half</th><th></th></tr>${expertTable}</table>
   <h4>Status</h4>${msgs('skills')}`];
