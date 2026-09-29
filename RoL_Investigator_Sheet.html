@@ -262,6 +262,7 @@ button.chip{cursor:pointer}
 </dialog>
 <input type="file" id="fileIn" accept="image/*" class="sr">
 <input type="file" id="jsonIn" accept="application/json,.json" class="sr">
+<input type="file" id="listsIn" accept="application/json,.json" class="sr">
 
 <script src="version.js"></script>
 <script>
@@ -1441,7 +1442,11 @@ const VIEWS={
   return ['Characters',`
   <p class="small muted">Characters are saved automatically in this browser. Export a file to back up or move a character to another device.</p>
   ${ids.map(id=>{ const c=roster.chars[id]; const o=occById(c.info?.occ); return `<div class="opt ${id===roster.cur?'sel':''}" style="align-items:center"><div style="flex:1"><div class="t">${esc(c.info?.name||'Unnamed investigator')}</div><div class="d">${esc(o?(o.custom?(c.info.occName||'Custom'):o.n):'No occupation')}</div></div>${id===roster.cur?'<span class="tag">current</span>':`<button class="btn sm" data-a="switchChar" data-x="${id}">Open</button>`}<button class="btn sm" data-a="delChar" data-x="${id}">Delete</button></div>`; }).join('')}
-  <div class="row-flex" style="margin-top:10px"><button class="btn primary" data-a="newChar">New investigator</button><button class="btn" data-a="dupChar">Duplicate current</button><button class="btn" data-a="exportChar">Export current (.json)</button><button class="btn" data-a="importChar">Import (.json)</button></div>`];
+  <div class="row-flex" style="margin-top:10px"><button class="btn primary" data-a="newChar">New investigator</button><button class="btn" data-a="dupChar">Duplicate current</button><button class="btn" data-a="exportChar">Export current (.json)</button><button class="btn" data-a="importChar">Import (.json)</button></div>
+  <h4>Custom lists</h4>
+  <p class="small muted">The custom weapons, advantages and disadvantages lists are shared by all your characters and are <b>not</b> included in character exports. Back them up to a file, and restore them after clearing browser data or on another device. Restoring adds to the lists you already have (entries with the same name are updated).</p>
+  <p class="small">Now: ${roster.weaponLib.length} weapon${roster.weaponLib.length===1?"":"s"}, ${roster.advLib.length} advantage${roster.advLib.length===1?"":"s"}, ${roster.disLib.length} disadvantage${roster.disLib.length===1?"":"s"}.</p>
+  <div class="row-flex"><button class="btn primary" data-a="backupLists">Back up custom lists</button><button class="btn" data-a="restoreLists">Restore custom lists</button></div>`];
  }
 };
 
@@ -1594,7 +1599,11 @@ const ACT={
  switchChar:x=>{ roster.cur=x; S=roster.chars[x]; },
  delChar:x=>{ const c=roster.chars[x]; if(!confirm('Delete '+(c.info?.name||'this investigator')+'? This cannot be undone.')) return; delete roster.chars[x]; if(roster.cur===x){ const ids=Object.keys(roster.chars); if(ids.length){ roster.cur=ids[0]; S=roster.chars[ids[0]]; } else { const id=uid(); roster.chars[id]=blank(); roster.cur=id; S=roster.chars[id]; } } },
  exportChar:()=>{ const blob=new Blob([JSON.stringify({...S,appVersion:APP_VERSION},null,1)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=APP_TAG+'_'+((S.info.name||'investigator').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_')||'investigator')+'.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); },
- importChar:()=>document.getElementById('jsonIn').click()
+ importChar:()=>document.getElementById('jsonIn').click(),
+ backupLists:()=>{ const data={app:APP_TAG,kind:'custom-lists',appVersion:APP_VERSION,saved:new Date().toISOString(),weaponLib:roster.weaponLib,advLib:roster.advLib,disLib:roster.disLib};
+   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,1)],{type:'application/json'}));
+   a.download=APP_TAG+'_custom_lists_'+new Date().toISOString().slice(0,10)+'.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); },
+ restoreLists:()=>document.getElementById('listsIn').click()
 };
 
 /* =====================================================================
@@ -1655,6 +1664,23 @@ document.getElementById('fileIn').addEventListener('change',e=>{
   const img=new Image(); const r=new FileReader();
   r.onload=()=>{ img.onload=()=>{ const max=420; const sc=Math.min(1,max/Math.max(img.width,img.height)); const c=document.createElement('canvas'); c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc); c.getContext('2d').drawImage(img,0,0,c.width,c.height); S.info.portrait=c.toDataURL('image/jpeg',.85); refresh(); }; img.src=r.result; };
   r.readAsDataURL(f); e.target.value='';
+});
+document.getElementById('listsIn').addEventListener('change',e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  f.text().then(t=>{
+    let d; try{ d=JSON.parse(t); }catch(err){ return alert('That file is not valid JSON.'); }
+    if(!d||d.kind!=='custom-lists') return alert('That isn’t a custom lists backup. (To load a character, use Import instead.)');
+    const report=[];
+    const mergeInto=(target,items,label,key)=>{ let added=0,updated=0;
+      for(const it of (Array.isArray(items)?items:[])){ if(!it||!it.n) continue;
+        const i=target.findIndex(x=>(key&&it[key]&&x[key]===it[key])||x.n.toLowerCase()===it.n.toLowerCase());
+        if(i>=0){ target[i]={...target[i],...it}; updated++; } else { target.push({...it}); added++; } }
+      report.push(label+': '+added+' added, '+updated+' updated'); };
+    mergeInto(roster.weaponLib,d.weaponLib,'Weapons',null);
+    mergeInto(roster.advLib,d.advLib,'Advantages','id');
+    mergeInto(roster.disLib,d.disLib,'Disadvantages','id');
+    refresh(); alert('Custom lists restored.\n\n'+report.join('\n'));
+  });
 });
 document.getElementById('jsonIn').addEventListener('change',e=>{
   const f=e.target.files[0]; if(!f) return;
