@@ -123,12 +123,15 @@ button,input,select,textarea{font:inherit;color:inherit}
 .foot{font-size:11px;color:var(--muted);text-align:center;margin-top:18px;font-family:var(--head);letter-spacing:.02em}
 
 /* ---------- modal ---------- */
-dialog{border:0;padding:0;border-radius:12px;background:var(--box);color:var(--ink);width:min(900px,calc(100vw - 24px));max-height:calc(100vh - 32px);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog{border:0;padding:0;border-radius:12px;background:var(--box);color:var(--ink);width:min(900px,calc(100vw - 24px));max-height:calc(100vh - 32px);max-height:calc(100dvh - 24px);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+/* header stays put; only the body scrolls. dvh = the height actually visible (iPad/iPhone Safari's 100vh includes the area behind its toolbars) */
+dialog[open]{display:flex;flex-direction:column}
+html.modal-open,html.modal-open body{overflow:hidden}
 dialog::backdrop{background:rgba(12,18,35,.55)}
-.mh{position:sticky;top:0;z-index:2;background:var(--navy);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.mh{flex:none;position:sticky;top:0;z-index:2;background:var(--navy);color:#fff;padding:10px 14px;display:flex;align-items:center;gap:10px}
 .mh h3{margin:0;font-family:var(--head);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:17px;flex:1}
 .mh .x{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;font-family:var(--head)}
-.mb{padding:14px 16px 20px;overflow:auto}
+.mb{padding:14px 16px 20px;overflow:auto;flex:1 1 auto;min-height:0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .mb h4{font-family:var(--head);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:14px;color:var(--navy-2);margin:18px 0 8px;border-bottom:1px solid var(--rule);padding-bottom:4px}
 .mb h4:first-child{margin-top:0}
 .rules{background:var(--paper);border-left:3px solid var(--navy-2);padding:8px 12px;border-radius:0 6px 6px 0;font-size:15.5px;margin:6px 0 10px}
@@ -988,7 +991,7 @@ function weaponDisplay(w){
    ===================================================================== */
 const dlg=document.getElementById('dlg'), dBody=document.getElementById('dlgBody'), dTitle=document.getElementById('dlgTitle');
 let cur={id:null,arg:null,focus:null};
-function open(id,arg,focus){ cur={id,arg,focus}; paint(); if(!dlg.open) dlg.showModal(); dBody.scrollTop=0;
+function open(id,arg,focus){ cur={id,arg,focus}; paint(); if(!dlg.open){ dlg.showModal(); document.documentElement.classList.add('modal-open'); } dBody.scrollTop=0;
   if(focus){ const el=dBody.querySelector(`[data-f="${focus}"]`); if(el){ el.scrollIntoView({block:'center'}); if(el.matches('input,textarea,select')) el.focus(); } } }
 function paint(){
   const st=dBody.scrollTop; const act=document.activeElement; const fb=act&&dBody.contains(act)&&act.dataset.b;
@@ -1576,7 +1579,7 @@ function setPath(path,v){
   if((path.startsWith('pkg.pts.')||path.startsWith('adj.'))&&(v==null||v===0)){ delete o[last]; return; }
   o[last]=v;
 }
-dlg.addEventListener('close',()=>renderSheet());
+dlg.addEventListener('close',()=>{ document.documentElement.classList.remove('modal-open'); renderSheet(); });
 document.getElementById('fileIn').addEventListener('change',e=>{
   const f=e.target.files[0]; if(!f) return;
   const img=new Image(); const r=new FileReader();
