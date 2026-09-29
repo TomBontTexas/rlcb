@@ -1151,7 +1151,7 @@ const VIEWS={
   ${rulesBox(`<ul>
    <li>Choose <b>${lim} starting skills</b> and boost each to <b>60%</b>. Include all <b>required</b> skills, then any recommended or other skills.</li>
    <li>Unchosen common and combat skills stay at <b>30%</b>; unchosen expert skills are <b>0%</b> (you can’t use them).</li>
-   <li><b>Art/Craft, Science and Languages</b>: one pick = one specialisation at 60% plus two others at 30%.</li>
+   <li><b>Art/Craft, Science and Languages</b>: at character creation, one starting pick = one specialisation at 60% plus two others at 30%. (Bought later with development points, each specialisation is a separate new skill.)</li>
    <li><b>Magic</b> needs the Magical advantage and gives <b>Sense Vestigia 60%</b> free.</li>
    <li>Your <b>own language</b> is free at INT or 60% (whichever is higher). A bilingual upbringing gives a second language free (same value, or half INT/30% if less fluent).</li>
    ${P?`<li><b>${esc(P.n)} package:</b> ${pts?`spend <b>60 points</b> on ${P.any?'any':'required/recommended'} skills (the “Pkg” column), max 80% each.`:'one extra starting skill at 60% (7 picks).'}${P.spell?' Magic starts at 70%.':''}</li>`:''}
@@ -1326,7 +1326,7 @@ const VIEWS={
     <p class="small muted">1 DP = one skill +10% (max 80%), or two skills +5% each (½ DP each). 80%+ goes up 5% (max 90%); 90%+ goes up 1% (max 99%). Each skill can be raised only once per phase.</p>
     <table class="tbl"><tr><th>Skill</th><th class="n">Now</th><th class="n">Raise</th><th class="n">Half step</th></tr>${rows}</table>
     <h4>Learn a new skill · 1 DP</h4>
-    <p class="small muted">Starts at half the related characteristic (Table 4, p. 117). For Art/Craft, Science or Languages, name the specialisation. Need a skill that isn’t in the book? <a href="#" data-a="open" data-x="skills" data-y="">Create a custom skill</a> in the Skills section first.</p>
+    <p class="small muted">Starts at half the related characteristic (Table 4, p. 117). For Art/Craft, Science or Languages, name the specialisation: each point buys <b>one</b> specialisation (the 60% + two 30% rule only applies to starting skills at character creation). Need a skill that isn’t in the book? <a href="#" data-a="open" data-x="skills" data-y="">Create a custom skill</a> in the Skills section first.</p>
     <div class="row-flex"><select id="devNew" style="width:auto"><option value="">Choose a skill…</option>${newOpts}</select><input type="text" id="devSpec" list="dl-all" placeholder="Specialisation (if needed)" style="width:220px"><button class="btn primary" data-a="devNew" ${can(1)?'':'disabled'}>Learn</button></div>
     <datalist id="dl-all">${[...SPEC['Art/Craft'],...SPEC.Science,...SPEC.Languages].map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
     ${hasMagicPick()?`<h4>Spells · 1 DP each, one learned and one mastered per phase</h4>
