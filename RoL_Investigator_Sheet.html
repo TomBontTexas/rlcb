@@ -563,7 +563,7 @@ function blank(){
   return {
     v:1,
     info:{name:'',occ:'',occName:'',occReq:'',occRec:'',pob:'',res:'',gender:'',age:'',notes:'',affluence:'Average',portrait:''},
-    opt:{kind:'human',free:false,wide:false,ageMov:false,homebrewDis:false,affinity:'',affinityCustom:'',refresh:''},
+    opt:{kind:'human',free:false,wide:false,ageMov:false,affinity:'',affinityCustom:'',refresh:''},
     ch:{STR:50,CON:50,DEX:50,INT:60,POW:70},
     luck:{start:null,cur:null,dice:null},
     mp:{cur:null},
@@ -595,7 +595,7 @@ function merge(base,src){ // deep merge: keeps new default fields AND every key 
   return base;
 }
 // Saves made before the merge fix lost skill improvements; rebuild them from the development history.
-function migrateDis(C){ if(C.dis&&!C.disList.includes(C.dis)) C.disList.push(C.dis); C.dis=''; }
+function migrateDis(C){ if(C.dis&&!C.disList.includes(C.dis)) C.disList.push(C.dis); C.dis=''; if(C.opt) delete C.opt.homebrewDis; }
 function repairFromLog(C){
   const sum={};
   for(const l of (C.dev&&C.dev.log)||[]){ const u=l.u||{}; if((u.t==='raise'||u.t==='new')&&u.k) sum[u.k]=(sum[u.k]||0)+(+u.amt||0); }
@@ -790,12 +790,13 @@ function validate(){
   if(S.pkg.id){
     const P=PKG.find(p=>p.id===S.pkg.id);
     if(!S.disList.length) add('adv','err','The '+P.n+' experience package requires a disadvantage. Choose one in Advantages.');
-    else if(!S.opt.homebrewDis&&S.disList.length>1) add('adv','err','Book rules allow one disadvantage per package (turn on the homebrew option in Rules options for more).');
+
     if(P.occ&&S.info.occ!==P.occ){ add('adv',P.soft?'warn':'err','The '+P.n+' package uses the '+occById(P.occ).n+' occupation'+(P.soft?' (others with GM consent).':'.')); }
     if(P.spell&&!hasAdv('magical')) add('adv','err','The Spellcaster package requires the Magical advantage.');
   }
   S.disList.forEach(id=>{ const d=disById(id); if(!d) return; const w=disCheck(d); if(w.length) add('adv','err',d.n+': '+w.join(', ')+'.'); });
-  if(S.disList.length&&!S.pkg.id&&!S.opt.homebrewDis) add('adv','warn','Disadvantages are normally only taken with an experience package (or turn on the homebrew option in Rules options).');
+  if(S.disList.length>1) add('adv','err','Only one disadvantage is allowed. Keep one and remove the others in Advantages.');
+  if(S.disList.length&&!S.pkg.id) add('adv','warn','Disadvantages are normally only taken with an experience package.');
   // affluence
   const af=S.info.affluence;
   if(af==='Wealthy'&&!hasAdv('wealthy')) add('back','err','Wealthy affluence requires the Wealthy advantage.');
@@ -1174,8 +1175,7 @@ const VIEWS={
       ${why.length?`<div class="why">Not met: ${esc(why.join(', '))}</div>`:''}
       ${on&&a.field?`<div style="margin-top:6px">${fld(a.field,`<input type="text" data-b="advField.${a.id}" value="${esc(S.advField[a.id]||'')}">`)}</div>`:''}</div></label>`; }).join('');
   const pk=S.pkg.id;
-  const multi=S.opt.homebrewDis;
-  const disHtml=allDis().map(d=>{ const on=hasDis(d.id); const why=disCheck(d); return `<label class="opt ${on?'sel':''} ${why.length&&!on?'no':''}"><input type="${multi?'checkbox':'radio'}" name="dis" data-a="${multi?'toggleDis':'setDis'}" data-x="${d.id}" ${on?'checked':''}><div><div class="t">${esc(d.n)}${d.custom?' <span class="tag">custom</span>':''}</div><div class="d">${esc(d.d||'')}</div>${why.length?`<div class="why">${esc(why.join(', '))}</div>`:''}</div></label>`; }).join('');
+  const disHtml=allDis().map(d=>{ const on=hasDis(d.id); const why=disCheck(d); return `<label class="opt ${on?'sel':''} ${why.length&&!on?'no':''}"><input type="radio" name="dis" data-a="setDis" data-x="${d.id}" ${on?'checked':''}><div><div class="t">${esc(d.n)}${d.custom?' <span class="tag">custom</span>':''}</div><div class="d">${esc(d.d||'')}</div>${why.length?`<div class="why">${esc(why.join(', '))}</div>`:''}</div></label>`; }).join('');
   return ['Step 3 · Advantages',`
   ${rulesBox('<p>Choose up to <b>two</b> advantages. <b>Major</b> advantages (Magical, Rich) count as both. You must meet each prerequisite — skill prerequisites use your current skill values, so pick skills first if needed (Signature Weapon/Firearm, The Knowledge).</p>')}
   <p><b>${slots}</b> of 2 choices used.</p>
@@ -1187,9 +1187,9 @@ const VIEWS={
   <label class="opt ${!pk?'sel':''}"><input type="radio" name="pkg" data-a="setPkg" data-x="" ${!pk?'checked':''}><div><div class="t">No package</div><div class="d">Standard character creation.</div></div></label>
   ${PKG.map(p=>`<label class="opt ${pk===p.id?'sel':''}"><input type="radio" name="pkg" data-a="setPkg" data-x="${p.id}" ${pk===p.id?'checked':''}><div style="flex:1"><div class="t">${p.n}</div><div class="d">${esc(p.d)}${p.occ?' Occupation: '+esc(occById(p.occ).n)+'.':''}</div>
    ${pk==='experienced'&&p.id==='experienced'?`<div class="row-flex small" style="margin-top:6px"><label><input type="radio" name="pmode" data-b="pkg.mode" value="points" ${S.pkg.mode==='points'?'checked':''}> 60 points on any skills</label><label><input type="radio" name="pmode" data-b="pkg.mode" value="newskill" ${S.pkg.mode==='newskill'?'checked':''}> one extra new skill at 60% (7 picks)</label></div>`:''}</div></label>`).join('')}
-  <h4>Disadvantages ${multi?'<span class="tag">homebrew: pick any</span>':(pk?'(required: choose one)':'(only with a package)')}</h4>
+  <h4>Disadvantage ${pk?'(required: choose one)':'(only with a package)'}</h4>
   ${pk&&!S.disList.length?'<p class="msg err">Your experience package needs a disadvantage.</p>':''}
-  ${multi?disHtml:(pk||S.disList.length?`<label class="opt ${!S.disList.length?'sel':''}"><input type="radio" name="dis" data-a="setDis" data-x="" ${!S.disList.length?'checked':''}><div><div class="t">None</div></div></label>${disHtml}`:'<p class="muted small">Choose an experience package to unlock disadvantages, or turn on the homebrew option in Rules options to pick them freely.</p>')}
+  ${(pk||S.disList.length?`<label class="opt ${!S.disList.length?'sel':''}"><input type="radio" name="dis" data-a="setDis" data-x="" ${!S.disList.length?'checked':''}><div><div class="t">None</div></div></label>${disHtml}`:'<p class="muted small">Choose an experience package to unlock disadvantages.</p>')}
   <h4>Custom disadvantages</h4>
   ${customBlock('dis')}
   <h4>Status</h4>${msgs('adv')}`];
@@ -1464,8 +1464,6 @@ const VIEWS={
   <label class="opt ${S.opt.wide?'sel':''}"><input type="checkbox" data-b="opt.wide" ${S.opt.wide?'checked':''}><div><div class="t">Extended range 20–90</div><div class="d">For more exceptional characters.</div></div></label>
   <label class="opt ${S.opt.ageMov?'sel':''}"><input type="checkbox" data-b="opt.ageMov" ${S.opt.ageMov?'checked':''}><div><div class="t">Age and movement</div><div class="d">−1 MOV in your 40s, −2 in your 50s … −5 in your 80s.</div></div></label>
   <p class="small muted">Experience packages and disadvantages are in the Advantages section.</p>
-  <h4>Homebrew rules <span class="tag">house rules, not from the book</span></h4>
-  <label class="opt ${S.opt.homebrewDis?'sel':''}"><input type="checkbox" data-b="opt.homebrewDis" ${S.opt.homebrewDis?'checked':''}><div><div class="t">Disadvantages without a package</div><div class="d">Pick any number of disadvantages, with or without an experience package. If you do take an experience package, it still needs at least one disadvantage, and you’ll be alerted if it has none.</div></div></label>
   <h4>Appearance</h4>
   <div class="row-flex"><button class="btn" data-a="theme" data-x="">Match system</button><button class="btn" data-a="theme" data-x="light">Light</button><button class="btn" data-a="theme" data-x="dark">Dark</button></div>`];
  },
@@ -1543,7 +1541,7 @@ const ACT={
    const c={id:(isAdv?'ca_':'cd_')+uid(),n,d}; if(isAdv) c.major=document.getElementById('cadvMajor').checked;
    (isAdv?S.customAdv:S.customDis).push(c);
    if(take){ if(isAdv){ if(advSlots()+(c.major?2:1)>2) alert('Created, but you have no advantage choices left. Remove one, or buy it with development points.'); else S.adv.push(c.id); }
-     else if(S.opt.homebrewDis) S.disList.push(c.id); else S.disList=[c.id]; } },
+     else S.disList=[c.id]; } },
  saveCustomLib:(kind,i)=>{ const c=(kind==='adv'?S.customAdv:S.customDis)[+i], lib=kind==='adv'?roster.advLib:roster.disLib;
    const j=lib.findIndex(x=>x.id===c.id); if(j>=0) lib[j]={...c}; else lib.push({...c}); },
  delCustomAD:(kind,i)=>{ const arr=kind==='adv'?S.customAdv:S.customDis; const c=arr[+i];
@@ -1553,7 +1551,6 @@ const ACT={
    if(!mine.some(x=>x.id===id)) mine.push({...src}); },
  delCustomLib:(kind,j)=>{ (kind==='adv'?roster.advLib:roster.disLib).splice(+j,1); },
  setDis:x=>{ S.disList=x?[x]:[]; },
- toggleDis:x=>{ S.disList=hasDis(x)?S.disList.filter(d=>d!==x):[...S.disList,x]; },
  pick:x=>{ const i=S.picks.findIndex(p=>p.skill===x); if(i>=0) S.picks.splice(i,1); else if(!pickLimitReached()) S.picks.push({skill:x}); },
  unpick:x=>{ S.picks.splice(+x,1); },
  addTok:x=>{ addToken(JSON.parse(x)); },
