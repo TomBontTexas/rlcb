@@ -204,7 +204,7 @@ button.chip{cursor:pointer}
 <body>
 <div class="wrap">
   <div class="top">
-    <div class="brand">Rivers of London<small>Investigator Sheet · click any section to fill it in</small></div>
+    <div class="brand">Rivers of London<small>Investigator Sheet · v<span class="app-ver"></span> · click any section to fill it in</small></div>
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" id="tab-front" aria-selected="true" data-tab="front">Front</button>
       <button class="tab" role="tab" id="tab-back" aria-selected="false" data-tab="back">Back</button>
@@ -221,7 +221,7 @@ button.chip{cursor:pointer}
     <section class="page front on" id="page-front" role="tabpanel" aria-labelledby="tab-front"></section>
     <section class="page back" id="page-back" role="tabpanel" aria-labelledby="tab-back"></section>
   </main>
-  <p class="foot">Built from the Rivers of London RPG investigator sheet (© 2025 Chaosium Inc.; Rivers of London © 2011–2025 Ben Aaronovitch). Personal, non-commercial use. Page numbers refer to the core rulebook.</p>
+  <p class="foot">Version <span class="app-ver"></span> · Built from the Rivers of London RPG investigator sheet (© 2025 Chaosium Inc.; Rivers of London © 2011–2025 Ben Aaronovitch). Personal, non-commercial use. Page numbers refer to the core rulebook.</p>
 </div>
 
 <dialog id="dlg" aria-labelledby="dlgTitle">
@@ -235,6 +235,10 @@ button.chip{cursor:pointer}
 /* =====================================================================
    RULES DATA (Rivers of London: the Roleplaying Game, Chaosium 2025)
    ===================================================================== */
+
+/* App version — bump this for every release and tag the commit v<APP_VERSION>. Format: MAJOR.MINOR.PATCH, two digits each. */
+const APP_VERSION = '0.01.00';
+document.querySelectorAll('.app-ver').forEach(el=>el.textContent=APP_VERSION);
 
 const CHARS = ['STR','CON','DEX','INT','POW'];
 const CHAR_NAMES = {STR:'Strength',CON:'Constitution',DEX:'Dexterity',INT:'Intelligence',POW:'Power'};
@@ -1459,7 +1463,7 @@ const ACT={
  dupChar:()=>{ const id=uid(); const c=JSON.parse(JSON.stringify(S)); c.info.name=(c.info.name||'Investigator')+' (copy)'; roster.chars[id]=c; roster.cur=id; S=c; },
  switchChar:x=>{ roster.cur=x; S=roster.chars[x]; },
  delChar:x=>{ const c=roster.chars[x]; if(!confirm('Delete '+(c.info?.name||'this investigator')+'? This cannot be undone.')) return; delete roster.chars[x]; if(roster.cur===x){ const ids=Object.keys(roster.chars); if(ids.length){ roster.cur=ids[0]; S=roster.chars[ids[0]]; } else { const id=uid(); roster.chars[id]=blank(); roster.cur=id; S=roster.chars[id]; } } },
- exportChar:()=>{ const blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=(S.info.name||'investigator').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_')+'.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); },
+ exportChar:()=>{ const blob=new Blob([JSON.stringify({...S,appVersion:APP_VERSION},null,1)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=(S.info.name||'investigator').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_')+'.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); },
  importChar:()=>document.getElementById('jsonIn').click()
 };
 
