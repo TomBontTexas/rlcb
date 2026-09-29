@@ -415,7 +415,7 @@ const ADV = [
  {id:'silver',n:'Silver-Tongued',pre:{},d:'Bonus die on Social rolls to win someone over with eloquence and persuasion.'},
  {id:'speedy',n:'Speedy',pre:{DEX:60},d:'MOV 9 instead of 8.'},
  {id:'steadfast',n:'Steadfast',pre:{POW:60},d:'No impairment from stress, gunfire, gore or the supernatural (still from your own injuries or HTD).'},
- {id:'linguist',n:'Linguist',house:1,pre:{},d:'House rule. Languages bought with development points start at your full INT instead of half INT. You still pay 1 DP for each language.'},
+ {id:'linguist',n:'Linguist',house:1,pre:{},d:'Homebrew. Languages bought with development points start at your full INT instead of half INT. You still pay 1 DP for each language.'},
  {id:'knowledge',n:'The Knowledge',pre:{INT:60,skill:['Navigate',60]},d:'Nominate a city or area: bonus die on Navigate rolls there.',field:'City / area'},
  {id:'wealthy',n:'Wealthy',pre:{},d:'Wealthy affluence rating.'}
 ];
@@ -442,7 +442,7 @@ const PKG = [
  {id:'experienced',n:'Experienced Investigator',occ:null,any:1,d:'Any occupation. 60 points on any skills, or one extra new skill at 60%.'},
  {id:'paranormal',n:'Paranormal',occ:'parapsych',soft:1,d:'Knows the demi-monde through books or contact (other occupations with GM consent).'},
  {id:'police',n:'Police',occ:'police',d:'Years on the force, or recently retired.'},
- {id:'educated',n:'Well Educated',occ:null,any:1,house:1,d:'House rule. Any occupation. 60 extra points to spend on any skills (no skill above 80% this way), in exchange for one disadvantage.'},
+ {id:'educated',n:'Well Educated',occ:null,any:1,house:1,d:'Homebrew. Any occupation. 60 extra points to spend on any skills (no skill above 80% this way), in exchange for one disadvantage.'},
  {id:'spellcaster',n:'Spellcaster',occ:null,spell:1,d:'Requires Magical. Magic starts at 70%; three first-order spells (1 mastered) and two second-order spells (1 mastered).'}
 ];
 
@@ -660,7 +660,7 @@ function computeSkills(){
   }
   if(isFae()) put('Sense Vestigia','common',60,'Sense Vestigia','fae');
   for(const x of S.extras){ put(skillKey(x.skill,x.spec),'expert',0,x.skill,x.dev?'dev':'extra'); } // 'dev' = bought with DP: removed only via Development history
-  // Linguist (house rule) applies live to every language bought with DP, whenever it was learned:
+  // Linguist (homebrew) applies live to every language bought with DP, whenever it was learned:
   // the stored start value is corrected to full INT (with Linguist) or half INT (without).
   for(const l of S.dev.log){ const u=l.u; if(!u||u.t!=='new'||baseSkillOf(u.k)!=='Languages') continue;
     const e=M.get(u.k); if(!e) continue;
@@ -1064,7 +1064,7 @@ function customBlock(kind){ // kind: 'adv' | 'dis'
       <button class="btn sm" data-a="delCustomAD" data-x="${kind}" data-y="${i}" ${taken(c.id)?'disabled title="Untick it first"':''}>Delete</button></div>`; }).join('');
   const libOpts=lib.filter(x=>!mine.some(m=>m.id===x.id)).map(x=>`<option value="${esc(x.id)}">${esc(x.n)}${x.major?' (major)':''}</option>`).join('');
   return `<div class="fld" style="margin:10px 0 4px"><span>Create a custom ${word}</span></div>
-  <p class="small muted" style="margin-top:0">For house rules or GM-approved ideas not in the book. The app records it but doesn’t apply its effect automatically: describe what it does for you and the GM.</p>
+  <p class="small muted" style="margin-top:0">For homebrew or GM-approved ideas not in the book. The app records it but doesn’t apply its effect automatically: describe what it does for you and the GM.</p>
   <div class="grid3">
     ${fld('Name',`<input type="text" id="c${kind}Name" placeholder="${isAdv?'e.g. Photographic Memory':'e.g. Phobia (Rats)'}">`)}
     <div style="grid-column:span 2">${fld('What it does',`<input type="text" id="c${kind}Desc" placeholder="${isAdv?'e.g. Bonus die on INT rolls to recall something seen':'e.g. Penalty die on all rolls when rats are present'}">`)}</div>
@@ -1171,7 +1171,7 @@ const VIEWS={
  adv(){
   const slots=advSlots();
   const advHtml=allAdv().map(a=>{ const on=hasAdv(a.id); const why=advCheck(a); const full=!on&&(slots+(a.major?2:1)>2);
-    return `<label class="opt ${on?'sel':''} ${(!on&&(why.length||full))?'no':''}"><input type="checkbox" data-a="toggleAdv" data-x="${a.id}" ${on?'checked':''}><div style="flex:1"><div class="t">${esc(a.n)}${a.custom?' <span class="tag">custom</span>':''}${a.major?' <span class="tag">major · 2 choices</span>':''}${a.house?' <span class="tag">house rule</span>':''}</div><div class="d">${esc(a.d)}</div>
+    return `<label class="opt ${on?'sel':''} ${(!on&&(why.length||full))?'no':''}"><input type="checkbox" data-a="toggleAdv" data-x="${a.id}" ${on?'checked':''}><div style="flex:1"><div class="t">${esc(a.n)}${a.custom?' <span class="tag">custom</span>':''}${a.major?' <span class="tag">major · 2 choices</span>':''}${a.house?' <span class="tag">homebrew</span>':''}</div><div class="d">${esc(a.d)}</div>
       <div class="small muted">Prerequisite: ${Object.keys(a.pre).length?[...CHARS.filter(c=>a.pre[c]).map(c=>c+' '+a.pre[c]),a.pre.skill?a.pre.skill[0]+' '+a.pre.skill[1]+'%':null].filter(Boolean).join(', '):'none'}</div>
       ${why.length?`<div class="why">Not met: ${esc(why.join(', '))}</div>`:''}
       ${on&&a.field?`<div style="margin-top:6px">${fld(a.field,`<input type="text" data-b="advField.${a.id}" value="${esc(S.advField[a.id]||'')}">`)}</div>`:''}</div></label>`; }).join('');
@@ -1186,7 +1186,7 @@ const VIEWS={
   <h4>Experience package (optional, GM’s permission)</h4>
   ${rulesBox('<p>For more experienced investigators. Most packages give <b>60 extra skill points</b> for required/recommended skills (no skill above 80% this way). Every package <b>requires one disadvantage</b>.</p>')}
   <label class="opt ${!pk?'sel':''}"><input type="radio" name="pkg" data-a="setPkg" data-x="" ${!pk?'checked':''}><div><div class="t">No package</div><div class="d">Standard character creation.</div></div></label>
-  ${PKG.map(p=>`<label class="opt ${pk===p.id?'sel':''}"><input type="radio" name="pkg" data-a="setPkg" data-x="${p.id}" ${pk===p.id?'checked':''}><div style="flex:1"><div class="t">${p.n}${p.house?' <span class="tag">house rule</span>':''}</div><div class="d">${esc(p.d)}${p.occ?' Occupation: '+esc(occById(p.occ).n)+'.':''}</div>
+  ${PKG.map(p=>`<label class="opt ${pk===p.id?'sel':''}"><input type="radio" name="pkg" data-a="setPkg" data-x="${p.id}" ${pk===p.id?'checked':''}><div style="flex:1"><div class="t">${p.n}${p.house?' <span class="tag">homebrew</span>':''}</div><div class="d">${esc(p.d)}${p.occ?' Occupation: '+esc(occById(p.occ).n)+'.':''}</div>
    ${pk==='experienced'&&p.id==='experienced'?`<div class="row-flex small" style="margin-top:6px"><label><input type="radio" name="pmode" data-b="pkg.mode" value="points" ${S.pkg.mode==='points'?'checked':''}> 60 points on any skills</label><label><input type="radio" name="pmode" data-b="pkg.mode" value="newskill" ${S.pkg.mode==='newskill'?'checked':''}> one extra new skill at 60% (7 picks)</label></div>`:''}</div></label>`).join('')}
   <h4>Disadvantage ${pk?'(required: choose one)':'(only with a package)'}</h4>
   ${pk&&!S.disList.length?'<p class="msg err">Your experience package needs a disadvantage.</p>':''}
